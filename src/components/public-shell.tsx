@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
 import { publicNavItems, routes } from "@/lib/routes";
 
@@ -24,8 +25,8 @@ export function SiteHeader() {
           className="flex items-center gap-3 rounded-lg outline-none transition-opacity duration-150 hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary/30"
           href={routes.home}
         >
-          <div className="grid size-9 place-items-center rounded-lg border border-primary/40 bg-primary/10 font-mono text-sm font-semibold text-primary">
-            TM
+          <div className="grid size-9 place-items-center overflow-hidden rounded-lg border border-primary/40 bg-primary/10">
+            <BrandMark />
           </div>
           <div>
             <p className="text-sm font-semibold leading-5">TradeMirror</p>

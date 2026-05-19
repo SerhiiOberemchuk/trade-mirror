@@ -1,0 +1,16 @@
+<svg width="960" height="540" viewBox="0 0 960 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="540" rx="24" fill="#050816"/>
+  <rect x="24" y="24" width="912" height="492" rx="18" fill="#0B1020" stroke="#1F2937"/>
+  <path d="M72 410L156 360L226 382L312 296L390 320L478 236L558 260L648 184L730 206L864 120" stroke="#22D3EE" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M72 432H888" stroke="#1F2937" stroke-width="2"/>
+  <path d="M72 340H888" stroke="#1F2937" stroke-width="2"/>
+  <path d="M72 248H888" stroke="#1F2937" stroke-width="2"/>
+  <path d="M72 156H888" stroke="#1F2937" stroke-width="2"/>
+  <rect x="72" y="72" width="142" height="48" rx="8" fill="#111827" stroke="#1F2937"/>
+  <text x="92" y="102" fill="#F9FAFB" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">BTC/USDT</text>
+  <rect x="732" y="72" width="156" height="48" rx="8" fill="#111827" stroke="#1F2937"/>
+  <text x="752" y="102" fill="#10B981" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">+2.41%</text>
+  <circle cx="864" cy="120" r="10" fill="#22D3EE"/>
+  <circle cx="648" cy="184" r="7" fill="#F59E0B"/>
+  <circle cx="478" cy="236" r="7" fill="#10B981"/>
+</svg>

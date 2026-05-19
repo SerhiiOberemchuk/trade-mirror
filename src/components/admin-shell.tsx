@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
 import { adminNavItems, routes } from "@/lib/routes";
 
@@ -13,10 +14,10 @@ export function AdminShell({ children }: AdminShellProps) {
         <aside className="hidden border-r border-border bg-surface lg:block">
           <div className="flex h-16 items-center gap-3 border-b border-border px-5">
             <Link
-              className="grid size-9 place-items-center rounded-lg border border-warning/40 bg-warning/10 font-mono text-sm font-semibold text-warning"
+              className="grid size-9 place-items-center overflow-hidden rounded-lg border border-warning/40 bg-warning/10 outline-none transition duration-150 hover:bg-warning/15 focus-visible:ring-2 focus-visible:ring-warning/30"
               href={routes.home}
             >
-              TM
+              <BrandMark alt="TradeMirror" />
             </Link>
             <div>
               <p className="text-sm font-semibold leading-5">TradeMirror Admin</p>
