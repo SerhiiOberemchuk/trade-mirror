@@ -4,7 +4,7 @@ import { sendVerificationEmail } from "@/server/auth/verification-email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin } from "better-auth/plugins";
+import { admin, haveIBeenPwned } from "better-auth/plugins";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -16,6 +16,7 @@ export const auth = betterAuth({
   }),
   plugins: [
     admin(),
+    haveIBeenPwned(),
     nextCookies(),
   ],
   emailAndPassword: {
