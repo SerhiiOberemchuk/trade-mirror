@@ -13,6 +13,12 @@ Last updated: 2026-05-19
 - [x] Created shared dashboard UI structure: `src/app/(workspace)/layout.tsx`, `src/components/dashboard-shell.tsx`, `src/data/dashboard.ts`.
 - [x] Created admin dashboard UI skeleton: `/admin`, `/admin/users`, `/admin/trading-pairs`, `/admin/deposits`, `/admin/withdrawals`, `/admin/bonuses`, `/admin/trades`, `/admin/copy-trading`, `/admin/referrals`, `/admin/support`, `/admin/settings`.
 - [x] Created shared admin UI structure: `src/app/(admin)/admin/layout.tsx`, `src/components/admin-shell.tsx`, `src/data/admin.ts`.
+- [x] Configured Drizzle ORM, Better Auth, auth API route, and generated auth schema/migrations.
+- [x] Added auth forms for registration and login with email verification.
+- [x] Added Better Auth admin plugin for user/admin roles and user management APIs.
+- [x] Added password policy: 12-128 characters, browser password-manager hints, and compromised password checks via Better Auth `haveIBeenPwned()`.
+- [x] Added protected route access for workspace pages and admin-only access for admin pages.
+- [x] Added authenticated topbar UI with real user identity and logout action.
 - [x] Added navigation polish pass:
   - [x] active public navigation states
   - [x] active user dashboard sidebar/mobile navigation states
@@ -23,9 +29,14 @@ Last updated: 2026-05-19
 
 ### Next Step
 
+- [ ] Apply pending Drizzle migration if not already applied: `npx drizzle-kit migrate`.
+- [x] Add protected route access for workspace pages.
+- [x] Add admin-only route access for admin pages.
+- [x] Show real session user and logout in workspace/admin topbars.
+- [ ] Manually verify auth flow in browser: register, verify email, login, logout, protected routes, admin redirect.
 - [ ] Full design review across public, user dashboard, and admin dashboard routes.
 - [ ] Fix layout density, responsive issues, navigation clarity, and visual hierarchy.
-- [ ] Decide whether to add UI polish before logic:
+- [ ] Continue UI polish before deeper domain logic:
   - [x] active nav state
   - [ ] better mobile navigation
   - [ ] loading/empty/error states
@@ -36,8 +47,8 @@ Last updated: 2026-05-19
 
 - [x] Decide exact backend stack: Drizzle ORM and Better Auth.
 - [ ] Add domain models and database schema.
-- [x] Add base auth, email verification, and Better Auth admin role plugin.
-- [ ] Add protected routes and role-based page access.
+- [x] Add base auth, email verification, Better Auth admin role plugin, password policy, and compromised password protection.
+- [x] Add protected routes and role-based page access.
 - [ ] Add Server Functions / Server Actions for mutations.
 - [ ] Add centralized cache tags and `updateTag()` invalidation for mutations.
 - [ ] Add real or simulated market data layer.
@@ -71,19 +82,19 @@ All balances, deposits, withdrawals, and trading actions are simulated for demon
 
 ## Frontend
 
-- Next.js
+- Next.js 16 with `cacheComponents`
 - TypeScript
 - Tailwind CSS
-- shadcn/ui
-- Framer Motion
-- TradingView Lightweight Charts
+- shadcn/ui (planned)
+- Framer Motion (planned)
+- TradingView Lightweight Charts (planned)
 
 ## Backend
 
 - Next.js Server Actions
 - PostgreSQL
-- Prisma or Drizzle ORM
-- Better Auth / NextAuth
+- Drizzle ORM
+- Better Auth
 
 ## Real-Time
 

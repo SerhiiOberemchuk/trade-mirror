@@ -1,13 +1,20 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
 import { dashboardNavItems } from "@/lib/navigation";
 
-type DashboardShellProps = {
-  children: React.ReactNode;
+type ShellUser = {
+  name: string;
+  email: string;
 };
 
-export function DashboardShell({ children }: DashboardShellProps) {
+type DashboardShellProps = {
+  children: React.ReactNode;
+  user: ShellUser;
+};
+
+export function DashboardShell({ children, user }: DashboardShellProps) {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="grid min-h-screen lg:grid-cols-[260px_1fr]">
@@ -39,7 +46,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         </aside>
 
         <section className="min-w-0">
-          <Topbar />
+          <Topbar user={user} />
           <div className="mx-auto max-w-7xl px-5 py-6 lg:px-8">{children}</div>
         </section>
       </div>
@@ -47,7 +54,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
   );
 }
 
-function Topbar() {
+function Topbar({ user }: { user: ShellUser }) {
+  const initials = getInitials(user.name);
+
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-surface/95">
       <div className="flex h-16 items-center justify-between gap-4 px-5 lg:px-8">
@@ -65,11 +74,13 @@ function Topbar() {
             <p className="font-mono text-sm font-semibold">$125,420.80</p>
             <p className="text-xs text-muted">Demo balance</p>
           </div>
-          <button className="grid size-10 place-items-center rounded-lg border border-border bg-card text-sm text-muted outline-none transition duration-150 hover:border-primary/50 hover:text-foreground active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary/30">
-            NT
-          </button>
+          <SignOutButton />
           <div className="grid size-10 place-items-center rounded-lg bg-primary font-semibold text-slate-950">
-            MQ
+            {initials}
+          </div>
+          <div className="max-w-44 truncate text-right">
+            <p className="truncate text-sm font-medium">{user.name}</p>
+            <p className="truncate text-xs text-muted">{user.email}</p>
           </div>
         </div>
       </div>
@@ -85,6 +96,16 @@ function Topbar() {
       </nav>
     </header>
   );
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 }
 
 type DashboardPageHeaderProps = {

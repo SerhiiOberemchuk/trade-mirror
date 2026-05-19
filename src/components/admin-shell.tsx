@@ -1,13 +1,21 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
 import { adminNavItems } from "@/lib/navigation";
 
-type AdminShellProps = {
-  children: React.ReactNode;
+type ShellUser = {
+  name: string;
+  email: string;
+  role?: string | string[] | null;
 };
 
-export function AdminShell({ children }: AdminShellProps) {
+type AdminShellProps = {
+  children: React.ReactNode;
+  user: ShellUser;
+};
+
+export function AdminShell({ children, user }: AdminShellProps) {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="grid min-h-screen lg:grid-cols-[280px_1fr]">
@@ -40,7 +48,7 @@ export function AdminShell({ children }: AdminShellProps) {
         </aside>
 
         <section className="min-w-0">
-          <AdminTopbar />
+          <AdminTopbar user={user} />
           <div className="mx-auto max-w-7xl px-5 py-6 lg:px-8">{children}</div>
         </section>
       </div>
@@ -48,7 +56,10 @@ export function AdminShell({ children }: AdminShellProps) {
   );
 }
 
-function AdminTopbar() {
+function AdminTopbar({ user }: { user: ShellUser }) {
+  const initials = getInitials(user.name);
+  const role = Array.isArray(user.role) ? user.role.join(", ") : (user.role ?? "admin");
+
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-surface/95">
       <div className="flex h-16 items-center justify-between gap-4 px-5 lg:px-8">
@@ -64,11 +75,13 @@ function AdminTopbar() {
             <p className="font-mono text-sm font-semibold">42</p>
             <p className="text-xs text-muted">Open reviews</p>
           </div>
-          <button className="grid size-10 place-items-center rounded-lg border border-border bg-card text-sm text-muted outline-none transition duration-150 hover:border-warning/50 hover:text-foreground active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-warning/30">
-            AL
-          </button>
+          <SignOutButton tone="warning" />
           <div className="grid size-10 place-items-center rounded-lg bg-warning font-semibold text-slate-950">
-            AD
+            {initials}
+          </div>
+          <div className="max-w-44 truncate text-right">
+            <p className="truncate text-sm font-medium">{user.name}</p>
+            <p className="truncate text-xs text-muted">{role}</p>
           </div>
         </div>
       </div>
@@ -85,6 +98,16 @@ function AdminTopbar() {
       </nav>
     </header>
   );
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 }
 
 type AdminPageHeaderProps = {
