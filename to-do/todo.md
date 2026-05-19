@@ -8,7 +8,7 @@ Last updated: 2026-05-19
 
 - [x] Created `CODE_STYLE.md` with project rules for Next.js 16, `cacheComponents`, Server Functions, cache tags, `updateTag`, DRY constants, TypeScript, and styling.
 - [x] Created public design pages: `/`, `/markets`, `/top-traders`, `/how-it-works`, `/pricing`, `/security`, `/faq`, `/login`, `/register`.
-- [x] Created shared public UI structure: `src/lib/routes.ts`, `src/data/marketing.ts`, `src/components/public-shell.tsx`, `src/components/market-panels.tsx`.
+- [x] Created shared public UI structure: `src/lib/navigation.ts`, `src/data/marketing.ts`, `src/components/public-shell.tsx`, `src/components/market-panels.tsx`.
 - [x] Created user dashboard UI skeleton: `/dashboard`, `/terminal`, `/copy-trading`, `/trader-marketplace`, `/wallet`, `/history`, `/verification`, `/support`, `/settings`.
 - [x] Created shared dashboard UI structure: `src/app/(workspace)/layout.tsx`, `src/components/dashboard-shell.tsx`, `src/data/dashboard.ts`.
 - [x] Created admin dashboard UI skeleton: `/admin`, `/admin/users`, `/admin/trading-pairs`, `/admin/deposits`, `/admin/withdrawals`, `/admin/bonuses`, `/admin/trades`, `/admin/copy-trading`, `/admin/referrals`, `/admin/support`, `/admin/settings`.
@@ -34,9 +34,10 @@ Last updated: 2026-05-19
 
 ### After Design Review
 
-- [ ] Decide exact backend stack: Prisma or Drizzle, Better Auth or NextAuth.
+- [x] Decide exact backend stack: Drizzle ORM and Better Auth.
 - [ ] Add domain models and database schema.
-- [ ] Add auth, protected routes, and role-based access.
+- [x] Add base auth, email verification, and Better Auth admin role plugin.
+- [ ] Add protected routes and role-based page access.
 - [ ] Add Server Functions / Server Actions for mutations.
 - [ ] Add centralized cache tags and `updateTag()` invalidation for mutations.
 - [ ] Add real or simulated market data layer.

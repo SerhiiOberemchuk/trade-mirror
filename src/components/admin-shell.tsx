@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
-import { adminNavItems } from "@/lib/routes";
+import { adminNavItems } from "@/lib/navigation";
 
 type AdminShellProps = {
   children: React.ReactNode;

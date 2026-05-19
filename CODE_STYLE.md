@@ -17,6 +17,15 @@
 - Custom abstraction дозволена тільки коли вона прибирає реальне дублювання, зменшує ризик помилки або описує доменне правило, якого немає в бібліотеці.
 - Для route hrefs використовуємо Next.js `typedRoutes` і тип `Route` з `next`, а не власний центральний `routes` object. UI navigation config може містити `label`, `symbol`, `href: Route`.
 
+## Single Responsibility
+
+- Кожен файл має одну чітку відповідальність: config збирає залежності, server helper виконує server-only операцію, UI component рендерить UI, data module зберігає дані.
+- Конфігураційні файли не містять inline business logic, HTML templates, database queries або transport details. Наприклад, `src/lib/auth.ts` тільки конфігурує Better Auth і підключає готові функції.
+- Server-only логіку тримаємо в `src/server`, коли вона працює з секретами, email transport, database mutations, external APIs або privileged auth operations.
+- Feature-specific функції виносимо у власні файли поруч із відповідальністю: email transport окремо від auth email template, auth config окремо від verification email delivery.
+- Файли, які статично імпортує `src/lib/auth.ts`, мають бути сумісні з Better Auth CLI. Не додаємо `import "server-only"` у static import graph auth config, якщо CLI не може прочитати конфіг із таким import.
+- Якщо файл починає одночасно конфігурувати бібліотеку, форматувати контент, ходити в базу і рендерити UI, це сигнал розділити його.
+
 ## Next.js 16 та Cache Components
 
 - `cacheComponents: true` є базовою архітектурною умовою проєкту.

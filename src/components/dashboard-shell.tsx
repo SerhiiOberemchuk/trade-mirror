@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
-import { dashboardNavItems } from "@/lib/routes";
+import { dashboardNavItems } from "@/lib/navigation";
 
 type DashboardShellProps = {
   children: React.ReactNode;

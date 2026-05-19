@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { AUTH_PASSWORD_POLICY } from "@/lib/auth-password-policy";
 
 export function RegisterForm() {
   const [errorMessage, setErrorMessage] = useState("");
@@ -43,13 +44,37 @@ export function RegisterForm() {
   return (
     <div className="rounded-lg border border-border bg-card p-5">
       <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
-        <Field label="First name" name="firstName" placeholder="Mira" />
-        <Field label="Last name" name="lastName" placeholder="Quant" />
+        <Field
+          autoComplete="given-name"
+          label="First name"
+          name="firstName"
+          placeholder="Mira"
+        />
+        <Field
+          autoComplete="family-name"
+          label="Last name"
+          name="lastName"
+          placeholder="Quant"
+        />
         <div className="sm:col-span-2">
-          <Field label="Email" name="email" placeholder="trader@example.com" type="email" />
+          <Field
+            autoComplete="email"
+            label="Email"
+            name="email"
+            placeholder="trader@example.com"
+            type="email"
+          />
         </div>
         <div className="sm:col-span-2">
-          <Field label="Password" name="password" placeholder="Create password" type="password" />
+          <Field
+            autoComplete="new-password"
+            label="Password"
+            maxLength={AUTH_PASSWORD_POLICY.maxLength}
+            minLength={AUTH_PASSWORD_POLICY.minLength}
+            name="password"
+            placeholder="Create password"
+            type="password"
+          />
         </div>
         <button
           className="rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
@@ -75,11 +100,17 @@ export function RegisterForm() {
 
 function Field({
   label,
+  autoComplete,
+  maxLength,
+  minLength,
   name,
   placeholder,
   type = "text",
 }: {
   label: string;
+  autoComplete?: React.HTMLInputAutoCompleteAttribute;
+  maxLength?: number;
+  minLength?: number;
   name: string;
   placeholder: string;
   type?: string;
@@ -89,7 +120,9 @@ function Field({
       <span className="text-sm font-medium">{label}</span>
       <input
         className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm text-foreground outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-        minLength={type === "password" ? 8 : undefined}
+        autoComplete={autoComplete}
+        maxLength={maxLength}
+        minLength={minLength}
         name={name}
         placeholder={placeholder}
         required

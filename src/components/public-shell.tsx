@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
-import { publicNavItems } from "@/lib/routes";
+import { publicNavItems } from "@/lib/navigation";
 
 type PublicShellProps = {
   children: React.ReactNode;

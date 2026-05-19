@@ -46,8 +46,20 @@ export function LoginForm() {
   return (
     <div className="rounded-lg border border-border bg-card p-5">
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <Field label="Email" name="email" placeholder="trader@example.com" type="email" />
-        <Field label="Password" name="password" placeholder="Enter password" type="password" />
+        <Field
+          autoComplete="email"
+          label="Email"
+          name="email"
+          placeholder="trader@example.com"
+          type="email"
+        />
+        <Field
+          autoComplete="current-password"
+          label="Password"
+          name="password"
+          placeholder="Enter password"
+          type="password"
+        />
         <button
           className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isPending}
@@ -72,11 +84,13 @@ export function LoginForm() {
 
 function Field({
   label,
+  autoComplete,
   name,
   placeholder,
   type,
 }: {
   label: string;
+  autoComplete?: React.HTMLInputAutoCompleteAttribute;
   name: string;
   placeholder: string;
   type: string;
@@ -86,6 +100,7 @@ function Field({
       <span className="text-sm font-medium">{label}</span>
       <input
         className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm text-foreground outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+        autoComplete={autoComplete}
         name={name}
         placeholder={placeholder}
         required
