@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
-import { adminNavItems, routes } from "@/lib/routes";
+import { adminNavItems } from "@/lib/routes";
 
 type AdminShellProps = {
   children: React.ReactNode;
@@ -15,7 +15,7 @@ export function AdminShell({ children }: AdminShellProps) {
           <div className="flex h-16 items-center gap-3 border-b border-border px-5">
             <Link
               className="grid size-9 place-items-center overflow-hidden rounded-lg border border-warning/40 bg-warning/10 outline-none transition duration-150 hover:bg-warning/15 focus-visible:ring-2 focus-visible:ring-warning/30"
-              href={routes.home}
+              href="/"
             >
               <BrandMark alt="TradeMirror" />
             </Link>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
-import { dashboardNavItems, routes } from "@/lib/routes";
+import { dashboardNavItems } from "@/lib/routes";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -15,7 +15,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
           <div className="flex h-16 items-center gap-3 border-b border-border px-5">
             <Link
               className="grid size-9 place-items-center overflow-hidden rounded-lg border border-primary/40 bg-primary/10 outline-none transition duration-150 hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary/30"
-              href={routes.home}
+              href="/"
             >
               <BrandMark alt="TradeMirror" />
             </Link>

@@ -1,66 +1,42 @@
-export const routes = {
-  home: "/",
-  markets: "/markets",
-  topTraders: "/top-traders",
-  howItWorks: "/how-it-works",
-  pricing: "/pricing",
-  security: "/security",
-  faq: "/faq",
-  login: "/login",
-  register: "/register",
-  dashboard: "/dashboard",
-  terminal: "/terminal",
-  copyTrading: "/copy-trading",
-  traderMarketplace: "/trader-marketplace",
-  wallet: "/wallet",
-  history: "/history",
-  verification: "/verification",
-  support: "/support",
-  settings: "/settings",
-  admin: "/admin",
-  adminUsers: "/admin/users",
-  adminTradingPairs: "/admin/trading-pairs",
-  adminDeposits: "/admin/deposits",
-  adminWithdrawals: "/admin/withdrawals",
-  adminBonuses: "/admin/bonuses",
-  adminTrades: "/admin/trades",
-  adminCopyTrading: "/admin/copy-trading",
-  adminReferrals: "/admin/referrals",
-  adminSupport: "/admin/support",
-  adminSettings: "/admin/settings",
-} as const;
+import type { Route } from "next";
+
+type NavItem = {
+  label: string;
+  href: Route;
+  symbol?: string;
+};
 
 export const publicNavItems = [
-  { label: "Markets", href: routes.markets },
-  { label: "Top Traders", href: routes.topTraders },
-  { label: "How it works", href: routes.howItWorks },
-  { label: "Pricing", href: routes.pricing },
-  { label: "Security", href: routes.security },
-  { label: "FAQ", href: routes.faq },
-] as const;
+  { label: "Markets", href: "/markets" },
+  { label: "Top Traders", href: "/top-traders" },
+  { label: "How it works", href: "/how-it-works" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Security", href: "/security" },
+  { label: "FAQ", href: "/faq" },
+] as const satisfies readonly NavItem[];
 
 export const dashboardNavItems = [
-  { label: "Overview", href: routes.dashboard, symbol: "OV" },
-  { label: "Terminal", href: routes.terminal, symbol: "TX" },
-  { label: "Copy Trading", href: routes.copyTrading, symbol: "CP" },
-  { label: "Marketplace", href: routes.traderMarketplace, symbol: "MP" },
-  { label: "Wallet", href: routes.wallet, symbol: "WL" },
-  { label: "History", href: routes.history, symbol: "HS" },
-  { label: "Verification", href: routes.verification, symbol: "KY" },
-  { label: "Support", href: routes.support, symbol: "SP" },
-  { label: "Settings", href: routes.settings, symbol: "ST" },
-] as const;
+  { label: "Overview", href: "/dashboard", symbol: "OV" },
+  { label: "Terminal", href: "/terminal", symbol: "TX" },
+  { label: "Copy Trading", href: "/copy-trading", symbol: "CP" },
+  { label: "Marketplace", href: "/trader-marketplace", symbol: "MP" },
+  { label: "Wallet", href: "/wallet", symbol: "WL" },
+  { label: "History", href: "/history", symbol: "HS" },
+  { label: "Verification", href: "/verification", symbol: "KY" },
+  { label: "Support", href: "/support", symbol: "SP" },
+  { label: "Settings", href: "/settings", symbol: "ST" },
+] as const satisfies readonly NavItem[];
 
 export const adminNavItems = [
-  { label: "Admin Overview", href: routes.admin, symbol: "AO" },
-  { label: "Users", href: routes.adminUsers, symbol: "US" },
-  { label: "Trading Pairs", href: routes.adminTradingPairs, symbol: "TP" },
-  { label: "Deposits", href: routes.adminDeposits, symbol: "DP" },
-  { label: "Withdrawals", href: routes.adminWithdrawals, symbol: "WD" },
-  { label: "Bonuses", href: routes.adminBonuses, symbol: "BN" },
-  { label: "Trades", href: routes.adminTrades, symbol: "TR" },
-  { label: "Copy Trading", href: routes.adminCopyTrading, symbol: "CT" },
-  { label: "Referrals", href: routes.adminReferrals, symbol: "RF" },
-  { label: "Support", href: routes.adminSupport, symbol: "SP" },
-  { label: "Settings", href: routes.adminSettings, symbol: "ST" },
-] as const;
+  { label: "Admin Overview", href: "/admin", symbol: "AO" },
+  { label: "Users", href: "/admin/users", symbol: "US" },
+  { label: "Trading Pairs", href: "/admin/trading-pairs", symbol: "TP" },
+  { label: "Deposits", href: "/admin/deposits", symbol: "DP" },
+  { label: "Withdrawals", href: "/admin/withdrawals", symbol: "WD" },
+  { label: "Bonuses", href: "/admin/bonuses", symbol: "BN" },
+  { label: "Trades", href: "/admin/trades", symbol: "TR" },
+  { label: "Copy Trading", href: "/admin/copy-trading", symbol: "CT" },
+  { label: "Referrals", href: "/admin/referrals", symbol: "RF" },
+  { label: "Support", href: "/admin/support", symbol: "SP" },
+  { label: "Settings", href: "/admin/settings", symbol: "ST" },
+] as const satisfies readonly NavItem[];

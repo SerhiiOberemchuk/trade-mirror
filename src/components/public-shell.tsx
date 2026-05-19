@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
-import { publicNavItems, routes } from "@/lib/routes";
+import { publicNavItems } from "@/lib/routes";
 
 type PublicShellProps = {
   children: React.ReactNode;
@@ -23,7 +23,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-5 py-4 lg:px-8">
         <Link
           className="flex items-center gap-3 rounded-lg outline-none transition-opacity duration-150 hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary/30"
-          href={routes.home}
+          href="/"
         >
           <div className="grid size-9 place-items-center overflow-hidden rounded-lg border border-primary/40 bg-primary/10">
             <BrandMark />
@@ -48,13 +48,13 @@ export function SiteHeader() {
         <div className="flex items-center gap-3">
           <Link
             className="hidden rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted outline-none transition duration-150 hover:border-primary/50 hover:text-foreground active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary/30 sm:inline-flex"
-            href={routes.login}
+            href="/login"
           >
             Log in
           </Link>
           <Link
             className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-slate-950 outline-none transition duration-150 hover:bg-cyan-300 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary/30"
-            href={routes.register}
+            href="/register"
           >
             Open demo
           </Link>

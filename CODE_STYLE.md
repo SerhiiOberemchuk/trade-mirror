@@ -9,6 +9,14 @@
 - Не повторюємося вручну: cache tags, route names, статуси, ролі, labels, options і доменні константи мають жити в одному місці.
 - Перед змінами в routing, caching, server functions, metadata або data fetching перевіряємо відповідний файл у `node_modules/next/dist/docs/`.
 
+## Library-first підхід
+
+- Максимально використовуємо готові можливості Next.js, Better Auth, Drizzle, React та інших основних бібліотек проєкту.
+- Перед створенням custom helper, wrapper, constants map, adapter або abstraction перевіряємо, чи не дає це вже бібліотека офіційним API.
+- Не дублюємо defaults бібліотек у власних константах без потреби. Наприклад, Better Auth `admin()` уже має `defaultRole: "user"` і `adminRoles: ["admin"]`, тому не виносимо ці значення окремо, доки не зʼявиться власна role model.
+- Custom abstraction дозволена тільки коли вона прибирає реальне дублювання, зменшує ризик помилки або описує доменне правило, якого немає в бібліотеці.
+- Для route hrefs використовуємо Next.js `typedRoutes` і тип `Route` з `next`, а не власний центральний `routes` object. UI navigation config може містити `label`, `symbol`, `href: Route`.
+
 ## Next.js 16 та Cache Components
 
 - `cacheComponents: true` є базовою архітектурною умовою проєкту.
@@ -36,6 +44,21 @@
 - Після mutation оновлюємо кеш у тому самому Server Action, де змінили дані.
 - `updateTag()` використовуємо для read-your-writes сценаріїв, коли користувач одразу має побачити власну зміну.
 - `updateTag()` викликаємо тільки всередині Server Actions. Для Route Handlers або зовнішніх webhook-like сценаріїв використовуємо рекомендований Next.js API, зазвичай `revalidateTag(tag, "max")` або профіль з документації.
+
+## Database, Drizzle та міграції
+
+- ORM у проєкті - Drizzle.
+- Доменні таблиці застосунку тримаємо в `src/db/schema`.
+- Better Auth schema тримаємо у generated файлі `auth-schema.ts`, який створюється Better Auth CLI.
+- `drizzle.config.ts` може використовувати `schema` як масив, наприклад `["./src/db/schema/index.ts", "./auth-schema.ts"]`, щоб Drizzle Kit бачив і доменні таблиці, і Better Auth tables.
+- `src/db/index.ts` тільки створює typed Drizzle client і не виконує запити на import-time.
+- Better Auth Drizzle adapter завжди отримує той самий schema object, що й Drizzle client.
+- Не дублюємо database table definitions у кількох місцях.
+- Codex не запускає і не створює міграції автоматично.
+- Codex не виконує `drizzle-kit generate`, `drizzle-kit push`, `drizzle-kit migrate`, `drizzle-kit studio` без прямого прохання.
+- Міграції, генерацію і застосування schema changes робить власник проєкту вручну через `drizzle-kit` commands.
+- Після зміни Drizzle schema обов'язково повідомляємо, що потрібна ручна генерація/міграція через `drizzle-kit`, але не запускаємо її самі.
+- Для env-змінних використовуємо назви з `.env.example`; секрети не хардкодимо.
 
 ## Cache Tags
 
@@ -96,7 +119,7 @@ export async function updateCopySettings(userId: string) {
 
 - Якщо значення повторюється більше одного разу і має доменний сенс, виносимо його в константу, map або helper.
 - Не дублюємо ролі, route hrefs, статуси, cache tags, table columns, filter options, trading pairs.
-- Для route hrefs бажано мати централізований `routes` object, коли сторінок стане більше.
+- Для route hrefs не створюємо власний `routes` object, якщо Next.js `typedRoutes` уже дає потрібну типізацію.
 - Для enum-like значень використовуємо `as const` об'єкти або union types.
 - Не створюємо абстракції заради абстракцій. Виносимо тільки те, що реально зменшує повторення або ризик помилки.
 

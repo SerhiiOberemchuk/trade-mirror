@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { chartBars, marketRows, traderRows } from "@/data/marketing";
 import { SectionHeader } from "@/components/public-shell";
-import { routes } from "@/lib/routes";
 
 export function TradingTerminalPreview() {
   return (
@@ -94,9 +94,9 @@ export function TopTradersPanel() {
     <div className="rounded-lg border border-border bg-card">
       <SectionHeader
         action={
-          <a className="text-sm font-medium text-primary" href={routes.topTraders}>
+          <Link className="text-sm font-medium text-primary" href="/top-traders">
             View all
-          </a>
+          </Link>
         }
         description="Ranked by simulated monthly performance"
         title="Top copy traders"
