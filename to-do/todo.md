@@ -1,8 +1,8 @@
-# TradeMirror — Copy Trading Simulation Platform
+# TradeMirror - Copy Trading Simulation Platform
 
 ## Implementation Status
 
-Last updated: 2026-05-19
+Last updated: 2026-05-20
 
 ### Done
 
@@ -15,10 +15,13 @@ Last updated: 2026-05-19
 - [x] Created shared admin UI structure: `src/app/(admin)/admin/layout.tsx`, `src/components/admin-shell.tsx`, `src/data/admin.ts`.
 - [x] Configured Drizzle ORM, Better Auth, auth API route, and generated auth schema/migrations.
 - [x] Added auth forms for registration and login with email verification.
+- [x] Added visible success feedback after registration when the verification email is sent.
+- [x] Added password visibility toggles to login and registration password fields.
 - [x] Added Better Auth admin plugin for user/admin roles and user management APIs.
 - [x] Added password policy: 12-128 characters, browser password-manager hints, and compromised password checks via Better Auth `haveIBeenPwned()`.
 - [x] Added protected route access for workspace pages and admin-only access for admin pages.
 - [x] Added authenticated topbar UI with real user identity and logout action.
+- [x] Functionally verified registration, email verification, login, logout, protected routes, and admin redirect.
 - [x] Added navigation polish pass:
   - [x] active public navigation states
   - [x] active user dashboard sidebar/mobile navigation states
@@ -29,102 +32,91 @@ Last updated: 2026-05-19
 
 ### Next Step
 
-- [ ] Apply pending Drizzle migration if not already applied: `npx drizzle-kit migrate`.
-- [x] Add protected route access for workspace pages.
-- [x] Add admin-only route access for admin pages.
-- [x] Show real session user and logout in workspace/admin topbars.
-- [ ] Manually verify auth flow in browser: register, verify email, login, logout, protected routes, admin redirect.
-- [ ] Full design review across public, user dashboard, and admin dashboard routes.
-- [ ] Fix layout density, responsive issues, navigation clarity, and visual hierarchy.
-- [ ] Continue UI polish before deeper domain logic:
-  - [x] active nav state
-  - [ ] better mobile navigation
-  - [ ] loading/empty/error states
-  - [ ] shared table/card primitives
-  - [ ] first pass on accessibility labels and focus states
+Active phase: UI foundation before deeper domain logic.
+
+- [x] Review public, workspace, and admin routes for layout density, responsive behavior, navigation clarity, and visual hierarchy.
+- [x] Add shared UI primitives for repeated dashboard/admin surfaces:
+  - [x] page headers
+  - [x] metric cards
+  - [x] data tables
+  - [x] status badges
+  - [x] empty states
+  - [x] loading states
+  - [x] error states
+  - [x] action toolbars
+- [x] Improve mobile navigation for workspace and admin sections.
+- [x] Add first-pass accessibility labels, focus states, status regions, and keyboard-friendly controls.
+- [ ] Re-run auth flow after layout changes: register, verify email, login, logout, protected routes, admin redirect.
+- [ ] Apply pending Drizzle migration only if needed and only when explicitly requested: `npx drizzle-kit migrate`.
 
 ### After Design Review
 
 - [x] Decide exact backend stack: Drizzle ORM and Better Auth.
-- [ ] Add domain models and database schema.
 - [x] Add base auth, email verification, Better Auth admin role plugin, password policy, and compromised password protection.
 - [x] Add protected routes and role-based page access.
+- [ ] Add domain models and database schema.
 - [ ] Add Server Functions / Server Actions for mutations.
 - [ ] Add centralized cache tags and `updateTag()` invalidation for mutations.
 - [ ] Add real or simulated market data layer.
 
----
-
 ## Project Overview
 
-TradeMirror is a premium FinTech SaaS platform for crypto trading simulation and copy trading.  
-The platform allows users to trade with demo balances using real-time crypto market data, publish their trading profiles, and let other users automatically copy their trading activity.
+TradeMirror is a premium FinTech SaaS platform for crypto trading simulation and copy trading.
 
-The project is designed as a high-level portfolio application that demonstrates advanced full-stack architecture, real-time systems, dashboards, analytics, admin management, and modern FinTech UX/UI design.
+The platform allows users to trade with demo balances using market data, publish simulated trading profiles, and let other users copy simulated trading activity. It is designed as a portfolio-grade full-stack application that demonstrates auth, dashboards, analytics, admin management, real-time systems, and FinTech UX.
 
-The platform is not intended for real financial operations.  
-All balances, deposits, withdrawals, and trading actions are simulated for demonstration purposes.
+The platform is not intended for real financial operations. All balances, deposits, withdrawals, bonuses, trades, and copy trading activity are simulated.
 
----
+## Main Goals
 
-# Main Goals
+- Demonstrate advanced full-stack development skills.
+- Build a premium FinTech dashboard experience.
+- Implement real-time market visualization.
+- Create a scalable SaaS-like architecture.
+- Showcase complex business logic.
+- Build a strong portfolio project for freelance and agency clients.
 
-- Demonstrate advanced full-stack development skills
-- Build a premium FinTech dashboard experience
-- Implement real-time market visualization
-- Create a scalable SaaS-like architecture
-- Showcase complex business logic
-- Build an impressive portfolio project for freelance and agency clients
+## Technology Stack
 
----
-
-# Technology Stack
-
-## Frontend
+Frontend:
 
 - Next.js 16 with `cacheComponents`
 - TypeScript
 - Tailwind CSS
-- shadcn/ui (planned)
-- Framer Motion (planned)
-- TradingView Lightweight Charts (planned)
+- shadcn/ui planned
+- Framer Motion planned
+- TradingView Lightweight Charts planned
 
-## Backend
+Backend:
 
 - Next.js Server Actions
 - PostgreSQL
 - Drizzle ORM
 - Better Auth
 
-## Real-Time
+Real-time:
 
-- WebSocket
 - Server-Sent Events
+- WebSocket when bidirectional behavior is needed
 
-## Infrastructure
+Infrastructure:
 
 - Docker
 - Vercel or VPS deployment
-- Redis (optional)
+- Redis optional
 
----
+## User Roles
 
-# User Roles
-
-## Guest
-
-Can access:
+Guest can access:
 
 - Landing page
 - Markets page
 - Top traders
 - Pricing
 - FAQ
-- Login/Register pages
+- Login and register pages
 
-## User / Trader
-
-Can access:
+User or trader can access:
 
 - Dashboard
 - Trading terminal
@@ -136,9 +128,7 @@ Can access:
 - Support chat
 - Profile settings
 
-## Admin
-
-Can manage:
+Admin can manage:
 
 - Users
 - Trading pairs
@@ -149,9 +139,7 @@ Can manage:
 - Platform statistics
 - Support tickets
 
----
-
-# Public Pages
+## Public Pages
 
 1. Home
 2. Markets
@@ -163,9 +151,7 @@ Can manage:
 8. Login
 9. Register
 
----
-
-# User Dashboard Pages
+## User Dashboard Pages
 
 1. Overview
 2. Trading Terminal
@@ -180,9 +166,7 @@ Can manage:
 11. Support Chat
 12. Settings
 
----
-
-# Admin Dashboard Pages
+## Admin Dashboard Pages
 
 1. Admin Overview
 2. Users
@@ -196,85 +180,51 @@ Can manage:
 10. Support Tickets
 11. Platform Settings
 
----
+## Main Platform Features
 
-# Main Platform Features
-
-## Authentication
+Authentication:
 
 - Registration
 - Login
+- Logout
+- Email verification
 - Protected routes
 - Session management
 - Role-based access
 
----
-
-## Trading Terminal
-
-Features:
+Trading terminal:
 
 - Real-time crypto charts
 - Candlestick charts
 - Pair selector
-- Buy/Sell simulation
-- Stop loss / Take profit
+- Buy/sell simulation
+- Stop loss and take profit
 - Open positions
 - Closed positions
 - Trading history
 
-Supported trading pairs example:
-
-- BTC/USDT
-- ETH/USDT
-- SOL/USDT
-- XRP/USDT
-
----
-
-## Copy Trading
-
-Features:
+Copy trading:
 
 - Follow traders
-- Automatically copy trades
+- Automatically copy simulated trades
 - Copy percentage settings
 - Trader statistics
 - Risk score
 - Monthly profit tracking
 - Followers count
 
----
+Trader marketplace:
 
-## Trader Marketplace
-
-Users can publish their profile as a copy-trading provider.
-
-Each trader profile includes:
-
-- Avatar
-- Username
+- Provider profiles
 - Win rate
 - Monthly PnL
 - Risk level
 - Followers count
 - Trade history
 - Performance chart
-- Copy button
+- Copy action
 
-Marketplace filters:
-
-- Most profitable
-- Lowest risk
-- Most copied
-- Highest win rate
-- New traders
-
----
-
-## Wallet System
-
-Simulated wallet system:
+Wallet system:
 
 - Demo balance
 - Bonus balance
@@ -283,136 +233,39 @@ Simulated wallet system:
 - Withdrawal requests
 - Transaction history
 
----
+Admin panel:
 
-## Bonus System
+- User management
+- Trading pair management
+- Simulated deposit and withdrawal review
+- Bonus controls
+- Trade monitoring
+- Copy trading monitoring
+- Support tickets
+- KYC review
 
-Features:
+## Design Concept
 
-- First deposit bonus
-- Second deposit bonus
-- Wager system simulation
-- Admin toggle for promotions
+Style: premium dark FinTech dashboard inspired by Binance, TradingView, Bybit, and modern SaaS dashboards.
 
----
+Color palette:
 
-## Verification System
+- Background: `#050816`
+- Surface: `#0B1020`
+- Card: `#111827`
+- Border: `#1F2937`
+- Primary: `#22D3EE`
+- Success: `#10B981`
+- Danger: `#EF4444`
+- Warning: `#F59E0B`
+- Text: `#F9FAFB`
+- Muted: `#9CA3AF`
 
-Mock KYC flow:
+UI principles:
 
-- Upload documents
-- Verification status
-- Admin approval/rejection
-
----
-
-## Support Chat
-
-Features:
-
-- User support chat
-- Ticket system
-- Admin replies
-- Live chat simulation
-
----
-
-## Real-Time Market Data
-
-Features:
-
-- Live token prices
-- Market capitalization
-- Real-time updates
-- Crypto market overview
-
----
-
-# Admin Panel Features
-
-## User Management
-
-- View users
-- Ban/unban users
-- Edit balances
-- View activity
-
-## Trading Management
-
-- Add/remove trading pairs
-- Monitor trades
-- View open positions
-
-## Financial Controls
-
-- Approve withdrawals
-- Reject withdrawals
-- Manage bonuses
-
-## Analytics
-
-- Total users
-- Total trades
-- Platform statistics
-- Active traders
-- Referral statistics
-
----
-
-# Design Concept
-
-## Style
-
-Premium dark FinTech dashboard.
-
-Inspired by:
-
-- Binance
-- TradingView
-- Bybit
-- Modern SaaS dashboards
-
----
-
-# Color Palette
-
-Background: #050816  
-Surface: #0B1020  
-Card: #111827  
-Border: #1F2937  
-Primary: #22D3EE  
-Success: #10B981  
-Danger: #EF4444  
-Warning: #F59E0B  
-Text: #F9FAFB  
-Muted: #9CA3AF
-
----
-
-# UI/UX Principles
-
-- Professional trading atmosphere
-- Clean information hierarchy
-- Real-time feeling
-- Glassmorphism elements
-- Large charts and analytics
-- Responsive layouts
-- Smooth animations
-- Premium SaaS visual quality
-
----
-
-# Dashboard Layout
-
-```txt
-┌─────────────────────────────────────────────┐
-│ Topbar: Search, Balance, Notifications, User │
-├───────────────┬─────────────────────────────┤
-│ Sidebar       │ Main Content                 │
-│ Overview      │ Cards / Charts / Tables      │
-│ Terminal      │                             │
-│ Copy Trading  │                             │
-│ Wallet        │                             │
-│ Verification  │                             │
-└───────────────┴─────────────────────────────┘
-```
+- Professional trading atmosphere.
+- Clean information hierarchy.
+- Dense dashboard layouts for scanning.
+- Clear demo/simulation boundaries.
+- Responsive layouts.
+- Accessible labels, focus states, and status feedback.

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { AUTH_PASSWORD_POLICY } from "@/lib/auth-password-policy";
+import { PasswordField } from "@/components/auth/password-field";
 
 export function RegisterForm() {
   const [errorMessage, setErrorMessage] = useState("");
@@ -12,33 +13,38 @@ export function RegisterForm() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setErrorMessage("");
     setNotice("");
     setIsPending(true);
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
     const firstName = String(formData.get("firstName") ?? "").trim();
     const lastName = String(formData.get("lastName") ?? "").trim();
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
     const name = [firstName, lastName].filter(Boolean).join(" ");
 
-    const { error } = await authClient.signUp.email({
-      name,
-      email,
-      password,
-      callbackURL: "/dashboard",
-    });
+    try {
+      const { error } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+        callbackURL: "/dashboard",
+      });
 
-    setIsPending(false);
+      if (error) {
+        setErrorMessage(error.message ?? "Unable to create this account.");
+        return;
+      }
 
-    if (error) {
-      setErrorMessage(error.message ?? "Unable to create this account.");
-      return;
+      form.reset();
+      setNotice("Account created successfully. We sent a verification email. Check your inbox to verify your address.");
+    } catch {
+      setErrorMessage("Unable to create this account. Please try again.");
+    } finally {
+      setIsPending(false);
     }
-
-    event.currentTarget.reset();
-    setNotice("Account created. Check your email and verify the address before logging in.");
   }
 
   return (
@@ -66,14 +72,13 @@ export function RegisterForm() {
           />
         </div>
         <div className="sm:col-span-2">
-          <Field
+          <PasswordField
             autoComplete="new-password"
             label="Password"
             maxLength={AUTH_PASSWORD_POLICY.maxLength}
             minLength={AUTH_PASSWORD_POLICY.minLength}
             name="password"
             placeholder="Create password"
-            type="password"
           />
         </div>
         <button
@@ -85,8 +90,22 @@ export function RegisterForm() {
         </button>
       </form>
 
-      {notice ? <p className="mt-4 text-sm leading-6 text-primary">{notice}</p> : null}
-      {errorMessage ? <p className="mt-4 text-sm leading-6 text-danger">{errorMessage}</p> : null}
+      {notice ? (
+        <div
+          className="mt-4 rounded-lg border border-success/40 bg-success/10 px-4 py-3 text-sm font-medium leading-6 text-emerald-200"
+          role="status"
+        >
+          {notice}
+        </div>
+      ) : null}
+      {errorMessage ? (
+        <div
+          className="mt-4 rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm font-medium leading-6 text-red-200"
+          role="alert"
+        >
+          {errorMessage}
+        </div>
+      ) : null}
 
       <p className="mt-5 text-sm text-muted">
         Already have an account?{" "}

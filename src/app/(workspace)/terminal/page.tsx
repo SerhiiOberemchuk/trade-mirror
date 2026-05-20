@@ -1,7 +1,42 @@
 import { marketRows } from "@/data/marketing";
 import { openPositions } from "@/data/dashboard";
 import { TradingTerminalPreview } from "@/components/market-panels";
-import { DashboardCard, DashboardPageHeader } from "@/components/dashboard-shell";
+import {
+  DataTable,
+  DashboardCard,
+  DashboardPageHeader,
+  StatusBadge,
+  type DataTableColumn,
+} from "@/components/dashboard-shell";
+
+type OpenPosition = (typeof openPositions)[number];
+
+const openPositionColumns = [
+  {
+    header: "Pair",
+    cell: (position) => <span className="font-medium">{position.pair}</span>,
+  },
+  {
+    header: "Side",
+    cell: (position) => <span className="text-muted">{position.side}</span>,
+  },
+  {
+    header: "Size",
+    cell: (position) => <span className="font-mono">{position.size}</span>,
+  },
+  {
+    header: "Entry",
+    cell: (position) => <span className="font-mono text-muted">{position.entry}</span>,
+  },
+  {
+    header: "PnL",
+    cell: (position) => (
+      <span className={position.pnl.startsWith("+") ? "font-mono text-success" : "font-mono text-danger"}>
+        {position.pnl}
+      </span>
+    ),
+  },
+] as const satisfies readonly DataTableColumn<OpenPosition>[];
 
 export default function TerminalPage() {
   return (
@@ -23,9 +58,7 @@ export default function TerminalPage() {
             {marketRows.map((market) => (
               <div className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-3 text-sm" key={market.pair}>
                 <span className="font-medium">{market.pair}</span>
-                <span className={market.change.startsWith("+") ? "text-success" : "text-danger"}>
-                  {market.change}
-                </span>
+                <StatusBadge tone={market.change.startsWith("+") ? "success" : "danger"}>{market.change}</StatusBadge>
               </div>
             ))}
           </div>
@@ -34,30 +67,11 @@ export default function TerminalPage() {
 
       <section className="mt-6">
         <DashboardCard description="Positions created by manual and copied demo orders" title="Open positions">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-muted">
-                <tr className="border-b border-border">
-                  <th className="pb-3 font-medium">Pair</th>
-                  <th className="pb-3 font-medium">Side</th>
-                  <th className="pb-3 font-medium">Size</th>
-                  <th className="pb-3 font-medium">Entry</th>
-                  <th className="pb-3 font-medium">PnL</th>
-                </tr>
-              </thead>
-              <tbody>
-                {openPositions.map((position) => (
-                  <tr className="border-b border-border/70 last:border-0" key={position.pair}>
-                    <td className="py-3 font-medium">{position.pair}</td>
-                    <td className="py-3 text-muted">{position.side}</td>
-                    <td className="py-3 font-mono">{position.size}</td>
-                    <td className="py-3 font-mono text-muted">{position.entry}</td>
-                    <td className={position.pnl.startsWith("+") ? "py-3 font-mono text-success" : "py-3 font-mono text-danger"}>{position.pnl}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={openPositionColumns}
+            getRowKey={(position) => position.pair}
+            rows={openPositions}
+          />
         </DashboardCard>
       </section>
     </>

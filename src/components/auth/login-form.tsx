@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { PasswordField } from "@/components/auth/password-field";
 
 export function LoginForm() {
   const router = useRouter();
@@ -53,12 +54,11 @@ export function LoginForm() {
           placeholder="trader@example.com"
           type="email"
         />
-        <Field
+        <PasswordField
           autoComplete="current-password"
           label="Password"
           name="password"
           placeholder="Enter password"
-          type="password"
         />
         <button
           className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"

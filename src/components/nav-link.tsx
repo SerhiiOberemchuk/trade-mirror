@@ -11,6 +11,8 @@ type NavLinkItemProps = {
   href: Route;
   label: string;
   mode: NavMode;
+  collapsed?: boolean;
+  onNavigate?: () => void;
   symbol?: string;
   tone?: NavTone;
 };
@@ -18,7 +20,9 @@ type NavLinkItemProps = {
 export function NavLinkItem({
   href,
   label,
+  collapsed = false,
   mode,
+  onNavigate,
   symbol,
   tone = "primary",
 }: NavLinkItemProps) {
@@ -36,6 +40,8 @@ export function NavLinkItem({
             : "border-transparent text-muted hover:border-border hover:bg-white/5 hover:text-foreground"
         }`}
         href={href}
+        onClick={onNavigate}
+        title={collapsed ? label : undefined}
       >
         {symbol ? (
           <span
@@ -48,7 +54,7 @@ export function NavLinkItem({
             {symbol}
           </span>
         ) : null}
-        <span className="transition duration-150 group-hover:translate-x-0.5">
+        <span className={`transition duration-150 group-hover:translate-x-0.5 ${collapsed ? "sr-only" : ""}`}>
           {label}
         </span>
       </Link>
@@ -65,6 +71,7 @@ export function NavLinkItem({
             : "border-border bg-card text-muted hover:bg-white/5 hover:text-foreground"
         }`}
         href={href}
+        onClick={onNavigate}
       >
         {label}
       </Link>
@@ -80,6 +87,7 @@ export function NavLinkItem({
           : "border-transparent text-muted hover:bg-white/5 hover:text-foreground"
       }`}
       href={href}
+      onClick={onNavigate}
     >
       {label}
     </Link>

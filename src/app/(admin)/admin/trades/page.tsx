@@ -1,5 +1,43 @@
 import { adminTrades } from "@/data/admin";
-import { AdminCard, AdminPageHeader } from "@/components/admin-shell";
+import {
+  AdminCard,
+  AdminPageHeader,
+  DataTable,
+  type DataTableColumn,
+} from "@/components/admin-shell";
+
+type AdminTrade = (typeof adminTrades)[number];
+
+const tradeColumns = [
+  {
+    header: "ID",
+    cell: (trade) => <span className="font-mono text-muted">{trade.id}</span>,
+  },
+  {
+    header: "User",
+    cell: (trade) => <span className="font-medium">{trade.user}</span>,
+  },
+  {
+    header: "Pair",
+    cell: (trade) => trade.pair,
+  },
+  {
+    header: "Side",
+    cell: (trade) => <span className="text-muted">{trade.side}</span>,
+  },
+  {
+    header: "Size",
+    cell: (trade) => <span className="font-mono">{trade.size}</span>,
+  },
+  {
+    header: "PnL",
+    cell: (trade) => (
+      <span className={trade.pnl.startsWith("+") ? "font-mono text-success" : "font-mono text-danger"}>
+        {trade.pnl}
+      </span>
+    ),
+  },
+] as const satisfies readonly DataTableColumn<AdminTrade>[];
 
 export default function AdminTradesPage() {
   return (
@@ -10,32 +48,11 @@ export default function AdminTradesPage() {
       />
 
       <AdminCard description="Recent trade activity" title="Trades">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-muted">
-              <tr className="border-b border-border">
-                <th className="pb-3 font-medium">ID</th>
-                <th className="pb-3 font-medium">User</th>
-                <th className="pb-3 font-medium">Pair</th>
-                <th className="pb-3 font-medium">Side</th>
-                <th className="pb-3 font-medium">Size</th>
-                <th className="pb-3 font-medium">PnL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {adminTrades.map((trade) => (
-                <tr className="border-b border-border/70 last:border-0" key={trade.id}>
-                  <td className="py-3 font-mono text-muted">{trade.id}</td>
-                  <td className="py-3 font-medium">{trade.user}</td>
-                  <td className="py-3">{trade.pair}</td>
-                  <td className="py-3 text-muted">{trade.side}</td>
-                  <td className="py-3 font-mono">{trade.size}</td>
-                  <td className={trade.pnl.startsWith("+") ? "py-3 font-mono text-success" : "py-3 font-mono text-danger"}>{trade.pnl}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={tradeColumns}
+          getRowKey={(trade) => trade.id}
+          rows={adminTrades}
+        />
       </AdminCard>
     </>
   );

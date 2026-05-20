@@ -7,6 +7,7 @@ import {
 import {
   DashboardCard,
   DashboardPageHeader,
+  StatusBadge,
   StatTile,
 } from "@/components/dashboard-shell";
 
@@ -30,7 +31,7 @@ export default function DashboardPage() {
             {openPositions.map((position) => (
               <Row
                 key={position.pair}
-                meta={`${position.side} · ${position.size} · Entry ${position.entry}`}
+                meta={`${position.side} / ${position.size} / Entry ${position.entry}`}
                 tone={position.pnl.startsWith("+") ? "success" : "danger"}
                 title={position.pair}
                 value={position.pnl}
@@ -44,7 +45,7 @@ export default function DashboardPage() {
             {copyAllocations.map((allocation) => (
               <Row
                 key={allocation.trader}
-                meta={`${allocation.copyRatio} copy · ${allocation.risk} risk`}
+                meta={`${allocation.copyRatio} copy / ${allocation.risk} risk`}
                 title={allocation.trader}
                 value={allocation.status}
               />
@@ -59,8 +60,10 @@ export default function DashboardPage() {
             {supportTickets.map((ticket) => (
               <div className="rounded-lg border border-border bg-background p-4" key={ticket.subject}>
                 <p className="font-medium">{ticket.subject}</p>
-                <p className="mt-2 text-sm text-muted">{ticket.priority} priority · {ticket.updated}</p>
-                <p className="mt-3 font-mono text-sm text-primary">{ticket.status}</p>
+                <p className="mt-2 text-sm text-muted">{ticket.priority} priority / {ticket.updated}</p>
+                <div className="mt-3">
+                  <StatusBadge tone={ticket.status === "Open" ? "warning" : "primary"}>{ticket.status}</StatusBadge>
+                </div>
               </div>
             ))}
           </div>
@@ -87,13 +90,13 @@ function Row({
         <p className="font-medium">{title}</p>
         <p className="mt-1 text-sm text-muted">{meta}</p>
       </div>
-      <p
-        className={`font-mono text-sm ${
-          tone === "success" ? "text-success" : tone === "danger" ? "text-danger" : ""
-        }`}
-      >
-        {value}
-      </p>
+      {tone ? (
+        <p className={`font-mono text-sm ${tone === "success" ? "text-success" : "text-danger"}`}>
+          {value}
+        </p>
+      ) : (
+        <StatusBadge tone={value === "Active" ? "success" : "warning"}>{value}</StatusBadge>
+      )}
     </div>
   );
 }
