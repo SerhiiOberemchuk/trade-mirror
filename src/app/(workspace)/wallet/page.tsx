@@ -14,6 +14,7 @@ import {
 } from "@/components/dashboard-shell";
 import { and, desc, eq } from "drizzle-orm";
 import {
+  applyBonusCodeAction,
   createDepositRequestAction,
   createWithdrawalRequestAction,
 } from "./actions";
@@ -61,7 +62,7 @@ export default async function WalletPage() {
         ))}
       </section>
 
-      <section className="mt-6 grid gap-5 xl:grid-cols-[0.8fr_0.8fr_1.2fr]">
+      <section className="mt-6 grid gap-5 xl:grid-cols-4">
         <DashboardCard
           description="Create a simulated deposit request for admin review"
           title="Deposit request"
@@ -98,6 +99,44 @@ export default async function WalletPage() {
               type="submit"
             >
               Submit deposit request
+            </button>
+          </form>
+        </DashboardCard>
+
+        <DashboardCard
+          description="Apply an enabled admin bonus campaign to create approved simulated credit"
+          title="Bonus code"
+        >
+          <form action={applyBonusCodeAction} className="space-y-4">
+            <label className="block">
+              <span className="text-sm font-medium">Code</span>
+              <input
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 font-mono text-sm uppercase outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                name="code"
+                placeholder="FIRST25"
+                required
+                type="text"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium">Base amount</span>
+              <input
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                defaultValue="1000"
+                max="100000"
+                min="10"
+                name="baseAmount"
+                step="0.01"
+                type="number"
+              />
+            </label>
+
+            <button
+              className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300"
+              type="submit"
+            >
+              Apply bonus
             </button>
           </form>
         </DashboardCard>

@@ -13,6 +13,7 @@ import { eq } from "drizzle-orm";
 
 const MARKETPLACE_PATH = "/trader-marketplace";
 const COPY_TRADING_PATH = "/copy-trading";
+const DASHBOARD_PATH = "/dashboard";
 const ADMIN_COPY_TRADING_PATH = "/admin/copy-trading";
 const MIN_ALLOCATION_CENTS = 1_000;
 const MAX_ALLOCATION_CENTS = 100_000_00;
@@ -137,11 +138,17 @@ function isPercentMetric(value: number, min: number, max: number) {
 
 function revalidateCopyPaths(userId: string) {
   invalidateAfterMutation({
-    paths: [MARKETPLACE_PATH, COPY_TRADING_PATH, ADMIN_COPY_TRADING_PATH],
+    paths: [
+      MARKETPLACE_PATH,
+      COPY_TRADING_PATH,
+      DASHBOARD_PATH,
+      ADMIN_COPY_TRADING_PATH,
+    ],
     tags: [
       CACHE_TAGS.traderMarketplace,
       CACHE_TAGS.adminCopyTrading,
       cacheTags.userCopyTrading(userId),
+      cacheTags.userDashboard(userId),
     ],
   });
 }

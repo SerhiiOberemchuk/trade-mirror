@@ -1,6 +1,9 @@
 import { db } from "@/db";
 import { simulatedTradesSchema } from "@/db/schema/trading.schema";
-import { transactions } from "@/data/dashboard";
+import {
+  depositRequestsSchema,
+  withdrawalRequestsSchema,
+} from "@/db/schema/wallet.schema";
 import {
   DashboardCard,
   DashboardPageHeader,
@@ -23,6 +26,18 @@ type TradeHistoryRow = {
   pnl: string;
   pnlCents: number;
   executed: string;
+};
+
+type AccountActivityRow = {
+  id: string;
+  type: "Deposit" | "Withdrawal";
+  amount: string;
+  status: string;
+  date: string;
+};
+
+type AccountActivityRecord = AccountActivityRow & {
+  requestedAt: Date;
 };
 
 const tradeColumns = [
@@ -122,22 +137,35 @@ export default async function HistoryPage() {
           description="Wallet and bonus events"
           title="Account activity"
         >
-          <div className="space-y-3">
-            {transactions.map((transaction) => (
-              <div
-                className="rounded-lg border border-border bg-background px-4 py-3 text-sm"
-                key={`${transaction.type}-${transaction.date}`}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <p className="font-medium">{transaction.type}</p>
-                  <p className="font-mono">{transaction.amount}</p>
+          {state.kind === "ready" && state.accountActivity.length > 0 ? (
+            <div className="space-y-3">
+              {state.accountActivity.map((activity) => (
+                <div
+                  className="rounded-lg border border-border bg-background px-4 py-3 text-sm"
+                  key={activity.id}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="font-medium">{activity.type}</p>
+                    <p className="font-mono">{activity.amount}</p>
+                  </div>
+                  <p className="mt-2 text-muted">
+                    {activity.status} / {activity.date}
+                  </p>
                 </div>
-                <p className="mt-2 text-muted">
-                  {transaction.status} / {transaction.date}
-                </p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : null}
+
+          {state.kind === "ready" && state.accountActivity.length === 0 ? (
+            <EmptyState
+              description="Create a simulated deposit, withdrawal, or bonus credit from the wallet."
+              title="No account activity"
+            />
+          ) : null}
+
+          {state.kind === "setup-required" ? (
+            <EmptyState title="Account activity is not ready" />
+          ) : null}
         </DashboardCard>
       </section>
     </>
@@ -147,18 +175,56 @@ export default async function HistoryPage() {
 async function getTradeHistory(
   userId: string,
 ): Promise<
-  { kind: "ready"; rows: TradeHistoryRow[] } | { kind: "setup-required" }
+  | {
+      kind: "ready";
+      accountActivity: AccountActivityRow[];
+      rows: TradeHistoryRow[];
+    }
+  | { kind: "setup-required" }
 > {
   try {
-    const rows = await db
-      .select()
-      .from(simulatedTradesSchema)
-      .where(eq(simulatedTradesSchema.userId, userId))
-      .orderBy(desc(simulatedTradesSchema.executedAt));
+    const [tradeRows, depositRows, withdrawalRows] = await Promise.all([
+      db
+        .select()
+        .from(simulatedTradesSchema)
+        .where(eq(simulatedTradesSchema.userId, userId))
+        .orderBy(desc(simulatedTradesSchema.executedAt)),
+      db
+        .select()
+        .from(depositRequestsSchema)
+        .where(eq(depositRequestsSchema.userId, userId))
+        .orderBy(desc(depositRequestsSchema.requestedAt)),
+      db
+        .select()
+        .from(withdrawalRequestsSchema)
+        .where(eq(withdrawalRequestsSchema.userId, userId))
+        .orderBy(desc(withdrawalRequestsSchema.requestedAt)),
+    ]);
 
     return {
+      accountActivity: ([
+        ...depositRows.map((row) => ({
+          amount: formatMoney(row.amountCents, row.currency),
+          date: formatDate(row.requestedAt),
+          id: `deposit-${row.id}`,
+          requestedAt: row.requestedAt,
+          status: formatStatus(row.status),
+          type: "Deposit" as const,
+        })),
+        ...withdrawalRows.map((row) => ({
+          amount: formatMoney(row.amountCents, row.currency),
+          date: formatDate(row.requestedAt),
+          id: `withdrawal-${row.id}`,
+          requestedAt: row.requestedAt,
+          status: formatStatus(row.status),
+          type: "Withdrawal" as const,
+        })),
+      ] satisfies AccountActivityRecord[])
+        .sort((left, right) => Number(right.requestedAt) - Number(left.requestedAt))
+        .slice(0, 6)
+        .map(toAccountActivityRow),
       kind: "ready",
-      rows: rows.map((row) => ({
+      rows: tradeRows.map((row) => ({
         action: row.action,
         executed: formatDate(row.executedAt),
         id: row.id,
@@ -195,4 +261,18 @@ function formatDate(date: Date) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function formatStatus(status: string) {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function toAccountActivityRow(record: AccountActivityRecord): AccountActivityRow {
+  return {
+    amount: record.amount,
+    date: record.date,
+    id: record.id,
+    status: record.status,
+    type: record.type,
+  };
 }

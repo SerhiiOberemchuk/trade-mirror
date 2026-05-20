@@ -34,11 +34,16 @@ Last updated: 2026-05-20
 - [x] Added persisted trader profile and copy setting schema, marketplace publish/copy actions, user copy controls, and admin copy monitor.
 - [x] Added copy automation execution for active copy settings when provider positions open/close.
 - [x] Added stop loss and take profit thresholds with live-price risk exit checks for simulated positions.
+- [x] Connected the user dashboard overview to real wallet, trade, copy trading, support, and live-price PnL data.
+- [x] Connected user trade history account activity to real deposit and withdrawal records.
+- [x] Added user profile settings update action and real admin overview/settings runtime panels.
+- [x] Added user bonus code application flow backed by persisted bonus campaigns and simulated approved deposits.
 - [x] Added project rule to avoid giant files and keep one file focused on one responsibility.
 - [x] Split Drizzle app schemas into focused `*.schema.ts` domain files and removed the schema barrel `index.ts`.
 - [x] Renamed Drizzle table exports to explicit `*Schema` names and updated app imports to use concrete schema modules.
 - [x] Split terminal trading actions into focused server modules for validation, lifecycle, copy automation, risk exits, and revalidation.
 - [x] Added normalized SSE market-data fan-out and live terminal market tape from real Binance prices.
+- [x] Added Binance candle adapter and real OHLCV candlestick panel on the trading terminal.
 - [x] Added centralized cache tags and `updateTag()` mutation invalidation helpers for existing Server Actions.
 - [x] Generated and applied Drizzle migrations for persisted deposit, withdrawal, trading pair, support ticket, and KYC workflows.
 - [x] Generated and applied Drizzle migrations for bonus campaign and simulated trading workflows.
@@ -80,7 +85,7 @@ Active phase: make the already planned domain workflows functional.
 - [ ] Add remaining domain models and database schema.
 - [ ] Add remaining Server Functions / Server Actions for mutations.
 - [x] Add centralized cache tags and `updateTag()` invalidation for mutations.
-- [ ] Add real or simulated market data layer.
+- [x] Add real or simulated market data layer.
 
 ## Project Overview
 

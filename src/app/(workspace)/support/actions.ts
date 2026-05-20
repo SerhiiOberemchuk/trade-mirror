@@ -10,6 +10,7 @@ import { requireSession } from "@/server/auth/session";
 import { invalidateAfterMutation } from "@/server/cache/revalidation";
 
 const SUPPORT_PATH = "/support";
+const DASHBOARD_PATH = "/dashboard";
 const ADMIN_SUPPORT_PATH = "/admin/support";
 
 type SupportTicketPriority =
@@ -43,8 +44,12 @@ export async function createSupportTicketAction(formData: FormData) {
   });
 
   invalidateAfterMutation({
-    paths: [SUPPORT_PATH, ADMIN_SUPPORT_PATH],
-    tags: [cacheTags.userSupport(session.user.id), CACHE_TAGS.adminSupport],
+    paths: [SUPPORT_PATH, DASHBOARD_PATH, ADMIN_SUPPORT_PATH],
+    tags: [
+      cacheTags.userSupport(session.user.id),
+      cacheTags.userDashboard(session.user.id),
+      CACHE_TAGS.adminSupport,
+    ],
   });
 }
 

@@ -7,6 +7,7 @@ export const TRADING_PATHS = {
   adminCopyTrading: "/admin/copy-trading",
   adminTrades: "/admin/trades",
   copyTrading: "/copy-trading",
+  dashboard: "/dashboard",
   history: "/history",
   terminal: "/terminal",
 } as const;

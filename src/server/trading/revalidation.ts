@@ -6,6 +6,7 @@ export function revalidateTradingPaths(userId: string) {
   invalidateAfterMutation({
     paths: [
       TRADING_PATHS.terminal,
+      TRADING_PATHS.dashboard,
       TRADING_PATHS.history,
       TRADING_PATHS.adminTrades,
       TRADING_PATHS.copyTrading,
@@ -13,6 +14,7 @@ export function revalidateTradingPaths(userId: string) {
     ],
     tags: [
       cacheTags.userTerminal(userId),
+      cacheTags.userDashboard(userId),
       cacheTags.userHistory(userId),
       cacheTags.userCopyTrading(userId),
       CACHE_TAGS.adminTrades,

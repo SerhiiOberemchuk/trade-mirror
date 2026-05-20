@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { simulatedPositionsSchema } from "@/db/schema/trading.schema";
 import { tradingPairsSchema } from "@/db/schema/trading-pairs.schema";
-import { TradingTerminalPreview } from "@/components/market-panels";
+import { CandlestickPanel } from "@/components/market/candlestick-panel";
 import { LiveMarketTape } from "@/components/market/live-market-tape";
 import { ActionToolbar } from "@/components/dashboard/primitives";
 import {
@@ -13,7 +13,11 @@ import {
   type DataTableColumn,
 } from "@/components/dashboard-shell";
 import { requireSession } from "@/server/auth/session";
-import { getBinanceTickerSnapshot } from "@/server/market-data/binance";
+import {
+  getBinanceCandles,
+  getBinanceTickerSnapshot,
+  type MarketCandle,
+} from "@/server/market-data/binance";
 import { and, asc, desc, eq } from "drizzle-orm";
 import {
   checkRiskExitsAction,
@@ -39,6 +43,11 @@ type OpenPositionRow = {
   pnl: string;
   pnlCents: number;
   riskExits: string;
+};
+
+type TerminalChart = {
+  candles: MarketCandle[];
+  symbol: string;
 };
 
 const openPositionColumns = [
@@ -114,7 +123,28 @@ export default async function TerminalPage() {
       />
 
       <section className="grid gap-5 xl:grid-cols-[1fr_360px]">
-        <TradingTerminalPreview />
+        <DashboardCard
+          description="Real OHLCV candles from Binance REST"
+          title="Market chart"
+        >
+          {state.kind === "ready" && state.chart ? (
+            <CandlestickPanel
+              candles={state.chart.candles}
+              symbol={state.chart.symbol}
+            />
+          ) : null}
+
+          {state.kind === "ready" && !state.chart ? (
+            <EmptyState
+              description="Enable at least one trading pair to load live candles."
+              title="No chart data"
+            />
+          ) : null}
+
+          {state.kind === "setup-required" ? (
+            <EmptyState title="Market chart is not ready" />
+          ) : null}
+        </DashboardCard>
         <DashboardCard
           action={
             <form action={checkRiskExitsAction}>
@@ -301,7 +331,12 @@ function OpenPositionActions({ position }: { position: OpenPositionRow }) {
 async function getTerminalState(
   userId: string,
 ): Promise<
-  | { kind: "ready"; pairs: PairRow[]; positions: OpenPositionRow[] }
+  | {
+      chart: TerminalChart | null;
+      kind: "ready";
+      pairs: PairRow[];
+      positions: OpenPositionRow[];
+    }
   | { kind: "setup-required" }
 > {
   try {
@@ -330,8 +365,16 @@ async function getTerminalState(
       ]),
     );
     const tickerMap = await getTickerMap(symbols);
+    const chartSymbol = pairRows[0]?.symbol ?? null;
+    const chart = chartSymbol
+      ? {
+          candles: await getCandles(chartSymbol),
+          symbol: chartSymbol,
+        }
+      : null;
 
     return {
+      chart,
       kind: "ready",
       pairs: pairRows.map((pair) => {
         const ticker = tickerMap.get(pair.symbol);
@@ -373,6 +416,18 @@ async function getTerminalState(
     };
   } catch {
     return { kind: "setup-required" };
+  }
+}
+
+async function getCandles(symbol: string) {
+  try {
+    return await getBinanceCandles({
+      interval: "15m",
+      limit: 72,
+      symbol,
+    });
+  } catch {
+    return [];
   }
 }
 

@@ -12,9 +12,11 @@ export const CACHE_TAGS = {
 } as const;
 
 export const cacheTags = {
+  userDashboard: (userId: string) => `user:${userId}:dashboard`,
   userCopyTrading: (userId: string) => `user:${userId}:copy-trading`,
   userHistory: (userId: string) => `user:${userId}:history`,
   userSupport: (userId: string) => `user:${userId}:support`,
+  userSettings: (userId: string) => `user:${userId}:settings`,
   userTerminal: (userId: string) => `user:${userId}:terminal`,
   userVerification: (userId: string) => `user:${userId}:verification`,
   userWallet: (userId: string) => `user:${userId}:wallet`,
