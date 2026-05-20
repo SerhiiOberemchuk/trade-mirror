@@ -33,6 +33,7 @@ export const adminNavItems = [
   { label: "Trading Pairs", href: "/admin/trading-pairs", symbol: "TP" },
   { label: "Deposits", href: "/admin/deposits", symbol: "DP" },
   { label: "Withdrawals", href: "/admin/withdrawals", symbol: "WD" },
+  { label: "KYC Review", href: "/admin/kyc", symbol: "KY" },
   { label: "Bonuses", href: "/admin/bonuses", symbol: "BN" },
   { label: "Trades", href: "/admin/trades", symbol: "TR" },
   { label: "Copy Trading", href: "/admin/copy-trading", symbol: "CT" },

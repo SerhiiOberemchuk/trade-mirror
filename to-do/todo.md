@@ -22,6 +22,18 @@ Last updated: 2026-05-20
 - [x] Added protected route access for workspace pages and admin-only access for admin pages.
 - [x] Added authenticated topbar UI with real user identity and logout action.
 - [x] Functionally verified registration, email verification, login, logout, protected routes, and admin redirect.
+- [x] Connected `/admin/users` to real Better Auth users with role and ban controls.
+- [x] Added persisted simulated withdrawal request schema and admin approve/reject actions.
+- [x] Connected user wallet withdrawal request form to the admin withdrawal review queue.
+- [x] Added persisted simulated deposit request schema, user wallet request form, and admin approve/reject actions.
+- [x] Added persisted trading pair schema and admin create/enable/pause controls.
+- [x] Added persisted support ticket schema, user ticket creation, and admin reply/close/reopen actions.
+- [x] Added persisted KYC request schema, user verification submission, and admin approve/reject review.
+- [x] Added persisted bonus campaign schema and admin create/enable/pause controls.
+- [x] Added persisted simulated position/trade schema, terminal order open/close actions, user trade history, and admin trade monitor.
+- [x] Added persisted trader profile and copy setting schema, marketplace publish/copy actions, user copy controls, and admin copy monitor.
+- [x] Generated and applied Drizzle migrations for persisted deposit, withdrawal, trading pair, support ticket, and KYC workflows.
+- [x] Generated and applied Drizzle migrations for bonus campaign and simulated trading workflows.
 - [x] Added navigation polish pass:
   - [x] active public navigation states
   - [x] active user dashboard sidebar/mobile navigation states
@@ -32,7 +44,7 @@ Last updated: 2026-05-20
 
 ### Next Step
 
-Active phase: UI foundation before deeper domain logic.
+Active phase: make the already planned domain workflows functional.
 
 - [x] Review public, workspace, and admin routes for layout density, responsive behavior, navigation clarity, and visual hierarchy.
 - [x] Add shared UI primitives for repeated dashboard/admin surfaces:
@@ -47,15 +59,17 @@ Active phase: UI foundation before deeper domain logic.
 - [x] Improve mobile navigation for workspace and admin sections.
 - [x] Add first-pass accessibility labels, focus states, status regions, and keyboard-friendly controls.
 - [ ] Re-run auth flow after layout changes: register, verify email, login, logout, protected routes, admin redirect.
-- [ ] Apply pending Drizzle migration only if needed and only when explicitly requested: `npx drizzle-kit migrate`.
+- [ ] Re-run smoke tests for wallet deposits/withdrawals, support tickets, KYC review, trading pair controls, and admin user controls after the latest migrations.
+- [ ] Generate and apply pending Drizzle migration for `trader_profile`, `copy_setting`, and copy trading enums: `npx drizzle-kit generate` then `npx drizzle-kit migrate`.
 
 ### After Design Review
 
 - [x] Decide exact backend stack: Drizzle ORM and Better Auth.
 - [x] Add base auth, email verification, Better Auth admin role plugin, password policy, and compromised password protection.
 - [x] Add protected routes and role-based page access.
-- [ ] Add domain models and database schema.
-- [ ] Add Server Functions / Server Actions for mutations.
+- [x] Add first real admin mutation surface: Better Auth user role and ban controls.
+- [ ] Add remaining domain models and database schema.
+- [ ] Add remaining Server Functions / Server Actions for mutations.
 - [ ] Add centralized cache tags and `updateTag()` invalidation for mutations.
 - [ ] Add real or simulated market data layer.
 
@@ -66,6 +80,8 @@ TradeMirror is a premium FinTech SaaS platform for crypto trading simulation and
 The platform allows users to trade with demo balances using market data, publish simulated trading profiles, and let other users copy simulated trading activity. It is designed as a portfolio-grade full-stack application that demonstrates auth, dashboards, analytics, admin management, real-time systems, and FinTech UX.
 
 The platform is not intended for real financial operations. All balances, deposits, withdrawals, bonuses, trades, and copy trading activity are simulated.
+
+Market data rule: all financial activity is simulated, while market data should be as real as practical. Real crypto pairs, live prices, candles, 24h change, and 24h volume may drive simulated trades, PnL, and copy trading results.
 
 ## Main Goals
 
@@ -96,8 +112,11 @@ Backend:
 
 Real-time:
 
-- Server-Sent Events
-- WebSocket when bidirectional behavior is needed
+- Binance WebSocket for live prices, candles, and 24h ticker data
+- CoinGecko REST API for coin logos, names, market cap, and metadata
+- TradingView Lightweight Charts for chart rendering
+- Server-Sent Events for normalized dashboard fan-out when useful
+- WebSocket when upstream market streaming or bidirectional behavior is needed
 
 Infrastructure:
 
@@ -178,7 +197,8 @@ Admin can manage:
 8. Copy Trading Activity
 9. Referrals
 10. Support Tickets
-11. Platform Settings
+11. KYC Review
+12. Platform Settings
 
 ## Main Platform Features
 
@@ -194,8 +214,10 @@ Authentication:
 
 Trading terminal:
 
-- Real-time crypto charts
-- Candlestick charts
+- Real crypto pairs
+- Real live prices
+- Real candlestick data
+- Real 24h change and volume
 - Pair selector
 - Buy/sell simulation
 - Stop loss and take profit
@@ -232,6 +254,15 @@ Wallet system:
 - Deposit simulation
 - Withdrawal requests
 - Transaction history
+
+Market/financial boundary:
+
+- BTC/USDT, ETH/USDT, and other enabled pairs should use real market data when the market-data layer is implemented.
+- User trades are simulated.
+- User balances are simulated.
+- Deposits and withdrawals are simulated.
+- PnL is calculated from real live price changes against simulated positions.
+- Copy trading is simulated but based on real price movement.
 
 Admin panel:
 

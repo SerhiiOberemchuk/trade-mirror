@@ -7,7 +7,9 @@ This project uses Next.js 16.2.6 with APIs and conventions that may differ from 
 
 - Registration, email verification delivery, login, logout, protected workspace access, and admin-only access are implemented and functionally verified by the owner.
 - Auth UI should keep clear success and error feedback for registration and login flows.
-- Trading, wallet, deposits, withdrawals, bonuses, KYC, support, and admin operations are simulations unless explicitly changed later.
+- Financial operations are always simulated: trades, balances, deposits, withdrawals, bonuses, PnL settlement, and copy trading execution do not touch real money or real exchange accounts.
+- Market data should be as real as practical: crypto pairs, live prices, candles, 24h change, and 24h volume should come from real market-data providers when that workflow is implemented.
+- The intended market-data split is Binance WebSocket for live prices/candles/tickers, CoinGecko REST for coin metadata/logos/market cap, and TradingView Lightweight Charts for rendering charts.
 
 ## Work Rules
 
@@ -17,5 +19,7 @@ This project uses Next.js 16.2.6 with APIs and conventions that may differ from 
 - Do not run `drizzle-kit generate`, `drizzle-kit push`, `drizzle-kit migrate`, or `drizzle-kit studio` unless the user explicitly asks for that command.
 - Do not hardcode secrets. Use the env names already documented in `.env.example`.
 - Keep UI changes consistent with the dark FinTech dashboard style: dense, professional, accessible, and clearly marked as demo/simulation when money-like flows are shown.
+- Keep the financial/market boundary explicit in code and UI: real market data may drive simulated trades and PnL, but simulated user actions must never be represented as real exchange execution.
+- Do not mix provider-specific payloads directly into UI components. Normalize Binance/CoinGecko data behind a market-data adapter before rendering or calculating simulated trading results.
 - Before finishing code changes, run `cmd /c npm run lint` and, when relevant, `cmd /c npm run build`.
 <!-- END:nextjs-agent-rules -->

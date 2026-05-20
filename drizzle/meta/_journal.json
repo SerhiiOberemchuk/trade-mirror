@@ -15,6 +15,55 @@
       "when": 1779220177631,
       "tag": "0001_known_surge",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779266909863,
+      "tag": "0002_abnormal_pride",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779267854213,
+      "tag": "0003_fat_reavers",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779276238290,
+      "tag": "0004_grey_maestro",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779276529672,
+      "tag": "0005_kind_white_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779277807787,
+      "tag": "0006_faithful_khan",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779278324345,
+      "tag": "0007_many_surge",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1779278824310,
+      "tag": "0008_perpetual_jasper_sitwell",
+      "breakpoints": true
     }
   ]
 }

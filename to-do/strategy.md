@@ -2,7 +2,9 @@
 
 Last updated: 2026-05-20
 
-TradeMirror should grow in controlled phases. The current priority is to turn the existing static shell into a polished product surface before adding deeper domain logic. Auth is already working, so the next valuable work is UI foundation, then domain schema, then simulated trading workflows.
+TradeMirror should grow in controlled phases. The current priority is to make the already planned simulation workflows functional without adding new scope. Auth, UI foundation, and several admin review queues are already working, so the next valuable work is to finish the remaining planned domain workflows.
+
+Core product boundary: all financial activity is simulated, while market data should be as real as practical. Real crypto pairs, live prices, candles, 24h change, and 24h volume can drive simulated orders, PnL, and copy trading, but user trades, balances, deposits, withdrawals, bonuses, and copy execution remain simulated.
 
 ## Phase 1: Auth And Protected Shell
 
@@ -47,7 +49,7 @@ Acceptance criteria:
 
 ## Phase 3: Domain Schema
 
-Status: planned after UI foundation.
+Status: in progress after UI foundation.
 
 Goal: define the database model for the simulation without implementing every mutation at once.
 
@@ -55,15 +57,17 @@ Candidate tables:
 
 - `wallets`
 - `walletTransactions`
-- `tradingPairs`
+- `tradingPairs` - schema added for admin pair management.
+- `depositRequests` - schema added for simulated deposit review.
+- `withdrawalRequests` - schema added for simulated withdrawal review.
 - `orders`
-- `positions`
-- `trades`
-- `copySettings`
-- `traderProfiles`
-- `supportTickets`
-- `kycRequests`
-- `bonusCampaigns`
+- `positions` - schema added for simulated manual positions.
+- `trades` - schema added for simulated trade monitoring and history.
+- `copySettings` - schema added for persisted copy allocation controls.
+- `traderProfiles` - schema added for persisted marketplace providers.
+- `supportTickets` - schema added for user tickets and admin operations.
+- `kycRequests` - schema added for user verification and admin review.
+- `bonusCampaigns` - schema added for admin campaign controls.
 
 Rules:
 
@@ -89,10 +93,10 @@ Work items:
 Candidate first actions:
 
 - Update copy trading settings.
-- Create simulated deposit request.
-- Create simulated withdrawal request.
-- Submit KYC request.
-- Create support ticket message.
+- Create simulated deposit request. Done.
+- Create simulated withdrawal request. Done.
+- Submit KYC request. Done.
+- Create support ticket message. Done.
 
 ## Phase 5: Simulated Trading Engine
 
@@ -100,16 +104,24 @@ Status: planned.
 
 Goal: make the trading terminal and copy trading pages functional with simulated money and positions.
 
+Market-data rule:
+
+- Real crypto pairs from enabled `tradingPairs`.
+- Real live prices and candles from a market-data adapter.
+- Real 24h change and volume for market context.
+- Simulated orders, balances, deposits, withdrawals, positions, PnL settlement, and copy execution.
+- PnL should be calculated from real live prices against simulated entry/size data.
+
 Work items:
 
 - Pair selector.
 - Market price source abstraction.
-- Buy/sell simulation.
-- Position lifecycle.
+- Buy/sell simulation. Started with manual market order creation.
+- Position lifecycle. Started with open and close actions.
 - Stop loss and take profit logic.
-- Trade history.
-- Copy trading allocation settings.
-- Trader performance summaries.
+- Trade history. Started with persisted user history and admin monitor.
+- Copy trading allocation settings. Started with persisted copy settings and pause/resume controls.
+- Trader performance summaries. Started with persisted provider profile metrics.
 
 Non-goals:
 
@@ -123,15 +135,39 @@ Status: planned.
 
 Goal: make admin pages control and review simulated platform state.
 
+Completed scope:
+
+- Real Better Auth user list.
+- User role updates through Better Auth admin API.
+- User ban and unban controls through Better Auth admin API.
+- Persisted withdrawal request schema.
+- Admin withdrawal approve and reject actions.
+- User wallet withdrawal request creation.
+- Persisted deposit request schema.
+- Admin deposit approve and reject actions.
+- User wallet deposit request creation.
+- Persisted trading pair schema.
+- Admin trading pair create, enable, and pause controls.
+- Persisted support ticket schema.
+- User support ticket creation.
+- Admin support ticket reply, close, and reopen controls.
+- Persisted KYC request schema.
+- User verification request submission.
+- Admin KYC approval and rejection controls.
+- Persisted bonus campaign schema.
+- Admin bonus campaign create, enable, and pause controls.
+- Persisted simulated position and trade schema.
+- User terminal manual order open and close actions.
+- User trade history from persisted simulated trades.
+- Admin trade monitor from persisted simulated trades.
+- Persisted trader profile and copy setting schema.
+- User marketplace profile publishing and copy allocation creation.
+- User copy allocation pause and resume controls.
+- Admin copy trading monitor from persisted copy settings.
+
 Work items:
 
-- User list and role/status controls.
-- Trading pair management.
-- Simulated deposit and withdrawal review.
-- Bonus campaign toggles.
-- Trade and copy trading monitoring.
-- Support ticket replies.
-- KYC approval and rejection.
+- Continue copy automation execution based on active copy settings.
 
 ## Phase 7: Real-Time Layer
 
@@ -141,11 +177,14 @@ Goal: add real-time market and dashboard updates without coupling UI to a single
 
 Candidate approaches:
 
-- Static/mock provider first.
-- Server-Sent Events for live dashboard updates.
-- WebSocket only when bidirectional behavior is actually needed.
+- Binance WebSocket for exchange-native live prices, kline/candles, and 24h ticker streams.
+- CoinGecko REST API for coin logos, names, market cap, and other metadata.
+- TradingView Lightweight Charts for rendering chart data; it is not a market-data provider.
+- Static/mock provider remains useful as a local fallback and test fixture.
+- Server-Sent Events can fan out normalized live market updates to dashboards if browser/client WebSocket ownership becomes too broad.
+- WebSocket is appropriate for upstream market feeds and any later bidirectional realtime feature.
 - Optional Redis later if the deployment model needs it.
 
 ## Current Recommendation
 
-Proceed with Phase 2. The next implementation task should be shared UI primitives plus a focused design review pass on workspace/admin pages. This gives the domain work stable components to render into.
+Generate and apply the pending Drizzle migration for trader profiles and copy settings, then smoke-test `/trader-marketplace`, `/copy-trading`, and `/admin/copy-trading`. After that, continue only with existing plan items: copy automation execution, stop loss/take profit logic, and real-time market-data fan-out.
