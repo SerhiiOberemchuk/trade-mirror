@@ -1,10 +1,11 @@
-import { db, schema } from "@/db";
+import { db } from "@/db";
 import { AUTH_PASSWORD_POLICY } from "@/lib/auth-password-policy";
 import { sendVerificationEmail } from "@/server/auth/verification-email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin, haveIBeenPwned } from "better-auth/plugins";
+import * as authSchema from "../../auth-schema";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -12,7 +13,7 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
-    schema,
+    schema: authSchema,
   }),
   plugins: [
     admin(),

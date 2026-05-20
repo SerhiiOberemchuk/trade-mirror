@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/db";
-import { depositRequests } from "@/db/schema";
+import { depositRequestsSchema } from "@/db/schema/wallet.schema";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireAdminSession } from "@/server/auth/session";
+import { invalidateAfterMutation } from "@/server/cache/revalidation";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 
 const ADMIN_DEPOSITS_PATH = "/admin/deposits";
 
@@ -28,14 +29,18 @@ async function reviewDeposit(
   }
 
   await db
-    .update(depositRequests)
+    .update(depositRequestsSchema)
     .set({
       status,
       reviewedAt: new Date(),
       reviewedById: session.user.id,
-      reviewNote: status === "approved" ? "Approved by admin." : "Rejected by admin.",
+      reviewNote:
+        status === "approved" ? "Approved by admin." : "Rejected by admin.",
     })
-    .where(eq(depositRequests.id, depositId));
+    .where(eq(depositRequestsSchema.id, depositId));
 
-  revalidatePath(ADMIN_DEPOSITS_PATH);
+  invalidateAfterMutation({
+    paths: [ADMIN_DEPOSITS_PATH],
+    tags: [CACHE_TAGS.adminDeposits],
+  });
 }

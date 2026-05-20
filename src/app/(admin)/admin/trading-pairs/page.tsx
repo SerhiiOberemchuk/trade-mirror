@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { tradingPairs } from "@/db/schema";
+import { tradingPairsSchema } from "@/db/schema/trading-pairs.schema";
 import {
   ActionToolbar,
   AdminCard,
@@ -30,19 +30,23 @@ type TradingPairRow = {
 const pairColumns = [
   {
     header: "Pair",
+    cell: (pair) => <span className="font-semibold">{pair.symbol}</span>,
+  },
+  {
+    header: "Assets",
     cell: (pair) => (
-      <span className="font-semibold">
-        {pair.symbol}
+      <span className="text-muted">
+        {pair.baseAsset} / {pair.quoteAsset}
       </span>
     ),
   },
   {
-    header: "Assets",
-    cell: (pair) => <span className="text-muted">{pair.baseAsset} / {pair.quoteAsset}</span>,
-  },
-  {
     header: "Status",
-    cell: (pair) => <StatusBadge tone={pair.status === "enabled" ? "success" : "warning"}>{pair.status}</StatusBadge>,
+    cell: (pair) => (
+      <StatusBadge tone={pair.status === "enabled" ? "success" : "warning"}>
+        {pair.status}
+      </StatusBadge>
+    ),
   },
   {
     header: "Spread",
@@ -50,7 +54,9 @@ const pairColumns = [
   },
   {
     header: "Leverage",
-    cell: (pair) => <span className="font-mono text-muted">{pair.leverage}</span>,
+    cell: (pair) => (
+      <span className="font-mono text-muted">{pair.leverage}</span>
+    ),
   },
   {
     header: "Volume",
@@ -74,7 +80,10 @@ export default async function AdminTradingPairsPage() {
       />
 
       <section className="grid gap-5 xl:grid-cols-[0.55fr_1.45fr]">
-        <AdminCard description="Add a market to the simulated terminal" title="Add pair">
+        <AdminCard
+          description="Add a market to the simulated terminal"
+          title="Add pair"
+        >
           <form action={createTradingPairAction} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Symbol</span>
@@ -135,7 +144,10 @@ export default async function AdminTradingPairsPage() {
           </form>
         </AdminCard>
 
-        <AdminCard description="Markets configured for the simulated terminal" title="Pair configuration">
+        <AdminCard
+          description="Markets configured for the simulated terminal"
+          title="Pair configuration"
+        >
           {state.kind === "ready" && state.rows.length > 0 ? (
             <DataTable
               columns={pairColumns}
@@ -170,14 +182,20 @@ function TradingPairActions({ pair }: { pair: TradingPairRow }) {
       {pair.status === "enabled" ? (
         <form action={pauseTradingPairAction}>
           <input name="pairId" type="hidden" value={pair.id} />
-          <button className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300" type="submit">
+          <button
+            className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300"
+            type="submit"
+          >
             Pause
           </button>
         </form>
       ) : (
         <form action={enableTradingPairAction}>
           <input name="pairId" type="hidden" value={pair.id} />
-          <button className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300" type="submit">
+          <button
+            className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
+            type="submit"
+          >
             Enable
           </button>
         </form>
@@ -187,14 +205,13 @@ function TradingPairActions({ pair }: { pair: TradingPairRow }) {
 }
 
 async function getTradingPairRows(): Promise<
-  | { kind: "ready"; rows: TradingPairRow[] }
-  | { kind: "setup-required" }
+  { kind: "ready"; rows: TradingPairRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(tradingPairs)
-      .orderBy(asc(tradingPairs.symbol));
+      .from(tradingPairsSchema)
+      .orderBy(asc(tradingPairsSchema.symbol));
 
     return {
       kind: "ready",

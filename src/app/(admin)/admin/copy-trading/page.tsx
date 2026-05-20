@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { copySettings } from "@/db/schema";
+import { copySettingsSchema } from "@/db/schema/copy-trading.schema";
 import {
   AdminCard,
   AdminPageHeader,
@@ -35,15 +35,23 @@ const copyColumns = [
   },
   {
     header: "Allocation",
-    cell: (activity) => <span className="font-mono text-muted">{activity.allocation}</span>,
+    cell: (activity) => (
+      <span className="font-mono text-muted">{activity.allocation}</span>
+    ),
   },
   {
     header: "Status",
-    cell: (activity) => <StatusBadge tone={activity.status === "active" ? "success" : "warning"}>{activity.status}</StatusBadge>,
+    cell: (activity) => (
+      <StatusBadge tone={activity.status === "active" ? "success" : "warning"}>
+        {activity.status}
+      </StatusBadge>
+    ),
   },
   {
     header: "Updated",
-    cell: (activity) => <span className="font-mono text-muted">{activity.updated}</span>,
+    cell: (activity) => (
+      <span className="font-mono text-muted">{activity.updated}</span>
+    ),
   },
 ] as const satisfies readonly DataTableColumn<AdminCopyActivityRow>[];
 
@@ -86,14 +94,13 @@ export default async function AdminCopyTradingPage() {
 }
 
 async function getAdminCopyActivityRows(): Promise<
-  | { kind: "ready"; rows: AdminCopyActivityRow[] }
-  | { kind: "setup-required" }
+  { kind: "ready"; rows: AdminCopyActivityRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(copySettings)
-      .orderBy(desc(copySettings.updatedAt));
+      .from(copySettingsSchema)
+      .orderBy(desc(copySettingsSchema.updatedAt));
 
     return {
       kind: "ready",

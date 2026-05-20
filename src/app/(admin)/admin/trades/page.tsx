@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { simulatedTrades } from "@/db/schema";
+import { simulatedTradesSchema } from "@/db/schema/trading.schema";
 import {
   AdminCard,
   AdminPageHeader,
@@ -27,7 +27,9 @@ type AdminTradeRow = {
 const tradeColumns = [
   {
     header: "ID",
-    cell: (trade) => <span className="font-mono text-muted">{trade.id.slice(0, 8)}</span>,
+    cell: (trade) => (
+      <span className="font-mono text-muted">{trade.id.slice(0, 8)}</span>
+    ),
   },
   {
     header: "User",
@@ -39,7 +41,11 @@ const tradeColumns = [
   },
   {
     header: "Side",
-    cell: (trade) => <StatusBadge tone={trade.side === "long" ? "success" : "danger"}>{trade.side}</StatusBadge>,
+    cell: (trade) => (
+      <StatusBadge tone={trade.side === "long" ? "success" : "danger"}>
+        {trade.side}
+      </StatusBadge>
+    ),
   },
   {
     header: "Action",
@@ -55,19 +61,29 @@ const tradeColumns = [
   },
   {
     header: "Price",
-    cell: (trade) => <span className="font-mono text-muted">{trade.price}</span>,
+    cell: (trade) => (
+      <span className="font-mono text-muted">{trade.price}</span>
+    ),
   },
   {
     header: "PnL",
     cell: (trade) => (
-      <span className={trade.pnlCents >= 0 ? "font-mono text-success" : "font-mono text-danger"}>
+      <span
+        className={
+          trade.pnlCents >= 0
+            ? "font-mono text-success"
+            : "font-mono text-danger"
+        }
+      >
         {trade.pnl}
       </span>
     ),
   },
   {
     header: "Executed",
-    cell: (trade) => <span className="font-mono text-muted">{trade.executed}</span>,
+    cell: (trade) => (
+      <span className="font-mono text-muted">{trade.executed}</span>
+    ),
   },
 ] as const satisfies readonly DataTableColumn<AdminTradeRow>[];
 
@@ -110,14 +126,13 @@ export default async function AdminTradesPage() {
 }
 
 async function getAdminTradeRows(): Promise<
-  | { kind: "ready"; rows: AdminTradeRow[] }
-  | { kind: "setup-required" }
+  { kind: "ready"; rows: AdminTradeRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(simulatedTrades)
-      .orderBy(desc(simulatedTrades.executedAt));
+      .from(simulatedTradesSchema)
+      .orderBy(desc(simulatedTradesSchema.executedAt));
 
     return {
       kind: "ready",

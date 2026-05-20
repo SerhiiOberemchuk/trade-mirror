@@ -32,8 +32,18 @@ Last updated: 2026-05-20
 - [x] Added persisted bonus campaign schema and admin create/enable/pause controls.
 - [x] Added persisted simulated position/trade schema, terminal order open/close actions, user trade history, and admin trade monitor.
 - [x] Added persisted trader profile and copy setting schema, marketplace publish/copy actions, user copy controls, and admin copy monitor.
+- [x] Added copy automation execution for active copy settings when provider positions open/close.
+- [x] Added stop loss and take profit thresholds with live-price risk exit checks for simulated positions.
+- [x] Added project rule to avoid giant files and keep one file focused on one responsibility.
+- [x] Split Drizzle app schemas into focused `*.schema.ts` domain files and removed the schema barrel `index.ts`.
+- [x] Renamed Drizzle table exports to explicit `*Schema` names and updated app imports to use concrete schema modules.
+- [x] Split terminal trading actions into focused server modules for validation, lifecycle, copy automation, risk exits, and revalidation.
+- [x] Added normalized SSE market-data fan-out and live terminal market tape from real Binance prices.
+- [x] Added centralized cache tags and `updateTag()` mutation invalidation helpers for existing Server Actions.
 - [x] Generated and applied Drizzle migrations for persisted deposit, withdrawal, trading pair, support ticket, and KYC workflows.
 - [x] Generated and applied Drizzle migrations for bonus campaign and simulated trading workflows.
+- [x] Generated and applied Drizzle migrations for trader profile and copy setting workflows.
+- [x] Generated and applied Drizzle migrations for copied position link fields and stop loss / take profit fields on `simulated_position`.
 - [x] Added navigation polish pass:
   - [x] active public navigation states
   - [x] active user dashboard sidebar/mobile navigation states
@@ -60,7 +70,6 @@ Active phase: make the already planned domain workflows functional.
 - [x] Add first-pass accessibility labels, focus states, status regions, and keyboard-friendly controls.
 - [ ] Re-run auth flow after layout changes: register, verify email, login, logout, protected routes, admin redirect.
 - [ ] Re-run smoke tests for wallet deposits/withdrawals, support tickets, KYC review, trading pair controls, and admin user controls after the latest migrations.
-- [ ] Generate and apply pending Drizzle migration for `trader_profile`, `copy_setting`, and copy trading enums: `npx drizzle-kit generate` then `npx drizzle-kit migrate`.
 
 ### After Design Review
 
@@ -70,7 +79,7 @@ Active phase: make the already planned domain workflows functional.
 - [x] Add first real admin mutation surface: Better Auth user role and ban controls.
 - [ ] Add remaining domain models and database schema.
 - [ ] Add remaining Server Functions / Server Actions for mutations.
-- [ ] Add centralized cache tags and `updateTag()` invalidation for mutations.
+- [x] Add centralized cache tags and `updateTag()` invalidation for mutations.
 - [ ] Add real or simulated market data layer.
 
 ## Project Overview

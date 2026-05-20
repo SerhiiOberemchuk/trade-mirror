@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { simulatedTrades } from "@/db/schema";
+import { simulatedTradesSchema } from "@/db/schema/trading.schema";
 import { transactions } from "@/data/dashboard";
 import {
   DashboardCard,
@@ -32,7 +32,11 @@ const tradeColumns = [
   },
   {
     header: "Side",
-    cell: (trade) => <StatusBadge tone={trade.side === "long" ? "success" : "danger"}>{trade.side}</StatusBadge>,
+    cell: (trade) => (
+      <StatusBadge tone={trade.side === "long" ? "success" : "danger"}>
+        {trade.side}
+      </StatusBadge>
+    ),
   },
   {
     header: "Action",
@@ -48,19 +52,29 @@ const tradeColumns = [
   },
   {
     header: "Price",
-    cell: (trade) => <span className="font-mono text-muted">{trade.price}</span>,
+    cell: (trade) => (
+      <span className="font-mono text-muted">{trade.price}</span>
+    ),
   },
   {
     header: "PnL",
     cell: (trade) => (
-      <span className={trade.pnlCents >= 0 ? "font-mono text-success" : "font-mono text-danger"}>
+      <span
+        className={
+          trade.pnlCents >= 0
+            ? "font-mono text-success"
+            : "font-mono text-danger"
+        }
+      >
         {trade.pnl}
       </span>
     ),
   },
   {
     header: "Executed",
-    cell: (trade) => <span className="font-mono text-muted">{trade.executed}</span>,
+    cell: (trade) => (
+      <span className="font-mono text-muted">{trade.executed}</span>
+    ),
   },
 ] as const satisfies readonly DataTableColumn<TradeHistoryRow>[];
 
@@ -76,7 +90,10 @@ export default async function HistoryPage() {
       />
 
       <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
-        <DashboardCard description="Manual and copied simulated trade executions" title="Trades">
+        <DashboardCard
+          description="Manual and copied simulated trade executions"
+          title="Trades"
+        >
           {state.kind === "ready" && state.rows.length > 0 ? (
             <DataTable
               columns={tradeColumns}
@@ -101,15 +118,23 @@ export default async function HistoryPage() {
           ) : null}
         </DashboardCard>
 
-        <DashboardCard description="Wallet and bonus events" title="Account activity">
+        <DashboardCard
+          description="Wallet and bonus events"
+          title="Account activity"
+        >
           <div className="space-y-3">
             {transactions.map((transaction) => (
-              <div className="rounded-lg border border-border bg-background px-4 py-3 text-sm" key={`${transaction.type}-${transaction.date}`}>
+              <div
+                className="rounded-lg border border-border bg-background px-4 py-3 text-sm"
+                key={`${transaction.type}-${transaction.date}`}
+              >
                 <div className="flex items-center justify-between gap-4">
                   <p className="font-medium">{transaction.type}</p>
                   <p className="font-mono">{transaction.amount}</p>
                 </div>
-                <p className="mt-2 text-muted">{transaction.status} / {transaction.date}</p>
+                <p className="mt-2 text-muted">
+                  {transaction.status} / {transaction.date}
+                </p>
               </div>
             ))}
           </div>
@@ -119,16 +144,17 @@ export default async function HistoryPage() {
   );
 }
 
-async function getTradeHistory(userId: string): Promise<
-  | { kind: "ready"; rows: TradeHistoryRow[] }
-  | { kind: "setup-required" }
+async function getTradeHistory(
+  userId: string,
+): Promise<
+  { kind: "ready"; rows: TradeHistoryRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(simulatedTrades)
-      .where(eq(simulatedTrades.userId, userId))
-      .orderBy(desc(simulatedTrades.executedAt));
+      .from(simulatedTradesSchema)
+      .where(eq(simulatedTradesSchema.userId, userId))
+      .orderBy(desc(simulatedTradesSchema.executedAt));
 
     return {
       kind: "ready",

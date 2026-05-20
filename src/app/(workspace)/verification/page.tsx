@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { kycRequests } from "@/db/schema";
+import { kycRequestsSchema } from "@/db/schema/kyc.schema";
 import { requireSession } from "@/server/auth/session";
 import {
   DashboardCard,
@@ -33,7 +33,10 @@ export default async function VerificationPage() {
       />
 
       <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
-        <DashboardCard description="Submit a simulated document review request" title="Verification request">
+        <DashboardCard
+          description="Submit a simulated document review request"
+          title="Verification request"
+        >
           <form action={submitKycRequestAction} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Legal name</span>
@@ -90,27 +93,40 @@ export default async function VerificationPage() {
           </form>
         </DashboardCard>
 
-        <DashboardCard description="Your persisted simulated KYC requests" title="Verification history">
+        <DashboardCard
+          description="Your persisted simulated KYC requests"
+          title="Verification history"
+        >
           {state.kind === "ready" && state.rows.length > 0 ? (
             <div className="space-y-3">
               {state.rows.map((request) => (
-                <article className="rounded-lg border border-border bg-background p-4" key={request.id}>
+                <article
+                  className="rounded-lg border border-border bg-background p-4"
+                  key={request.id}
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="font-medium">{request.legalName}</p>
                       <p className="mt-1 text-sm text-muted">
-                        {request.country} / {formatDocumentType(request.documentType)}
+                        {request.country} /{" "}
+                        {formatDocumentType(request.documentType)}
                       </p>
-                      <p className="mt-2 font-mono text-xs text-muted">{request.documentReference}</p>
+                      <p className="mt-2 font-mono text-xs text-muted">
+                        {request.documentReference}
+                      </p>
                     </div>
-                    <StatusBadge tone={getStatusTone(request.status)}>{request.status}</StatusBadge>
+                    <StatusBadge tone={getStatusTone(request.status)}>
+                      {request.status}
+                    </StatusBadge>
                   </div>
                   {request.reviewNote ? (
                     <p className="mt-4 rounded-lg border border-border bg-card px-4 py-3 text-sm leading-6 text-muted">
                       {request.reviewNote}
                     </p>
                   ) : null}
-                  <p className="mt-3 text-xs text-muted">Submitted {request.submitted}</p>
+                  <p className="mt-3 text-xs text-muted">
+                    Submitted {request.submitted}
+                  </p>
                 </article>
               ))}
             </div>
@@ -135,16 +151,17 @@ export default async function VerificationPage() {
   );
 }
 
-async function getUserKycRequests(userId: string): Promise<
-  | { kind: "ready"; rows: KycRequestRow[] }
-  | { kind: "setup-required" }
+async function getUserKycRequests(
+  userId: string,
+): Promise<
+  { kind: "ready"; rows: KycRequestRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(kycRequests)
-      .where(eq(kycRequests.userId, userId))
-      .orderBy(desc(kycRequests.submittedAt));
+      .from(kycRequestsSchema)
+      .where(eq(kycRequestsSchema.userId, userId))
+      .orderBy(desc(kycRequestsSchema.submittedAt));
 
     return {
       kind: "ready",

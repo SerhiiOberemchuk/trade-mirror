@@ -1,5 +1,8 @@
 import { db } from "@/db";
-import { depositRequests, withdrawalRequests } from "@/db/schema";
+import {
+  depositRequestsSchema,
+  withdrawalRequestsSchema,
+} from "@/db/schema/wallet.schema";
 import { transactions, walletBalances } from "@/data/dashboard";
 import { requireSession } from "@/server/auth/session";
 import {
@@ -50,12 +53,19 @@ export default async function WalletPage() {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {walletBalances.map((balance) => (
-          <StatTile key={balance.label} label={balance.label} value={balance.value} />
+          <StatTile
+            key={balance.label}
+            label={balance.label}
+            value={balance.value}
+          />
         ))}
       </section>
 
       <section className="mt-6 grid gap-5 xl:grid-cols-[0.8fr_0.8fr_1.2fr]">
-        <DashboardCard description="Create a simulated deposit request for admin review" title="Deposit request">
+        <DashboardCard
+          description="Create a simulated deposit request for admin review"
+          title="Deposit request"
+        >
           <form action={createDepositRequestAction} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Amount</span>
@@ -92,7 +102,10 @@ export default async function WalletPage() {
           </form>
         </DashboardCard>
 
-        <DashboardCard description="Create a simulated withdrawal request for admin review" title="Withdrawal request">
+        <DashboardCard
+          description="Create a simulated withdrawal request for admin review"
+          title="Withdrawal request"
+        >
           <form action={createWithdrawalRequestAction} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Amount</span>
@@ -129,10 +142,16 @@ export default async function WalletPage() {
           </form>
         </DashboardCard>
 
-        <DashboardCard description="Recent wallet-related events" title="Transactions">
+        <DashboardCard
+          description="Recent wallet-related events"
+          title="Transactions"
+        >
           <div className="space-y-3">
             {transactions.map((transaction) => (
-              <div className="grid gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm sm:grid-cols-4" key={`${transaction.type}-${transaction.date}`}>
+              <div
+                className="grid gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm sm:grid-cols-4"
+                key={`${transaction.type}-${transaction.date}`}
+              >
                 <p className="font-medium">{transaction.type}</p>
                 <p className="font-mono">{transaction.amount}</p>
                 <p className="text-muted">{transaction.status}</p>
@@ -144,7 +163,10 @@ export default async function WalletPage() {
       </section>
 
       <section className="mt-6 grid gap-5 xl:grid-cols-2">
-        <DashboardCard description="Your persisted simulated deposit requests" title="Deposit review queue">
+        <DashboardCard
+          description="Your persisted simulated deposit requests"
+          title="Deposit review queue"
+        >
           {depositState.kind === "ready" && depositState.rows.length > 0 ? (
             <div className="space-y-3">
               {depositState.rows.map((request) => (
@@ -154,7 +176,9 @@ export default async function WalletPage() {
                 >
                   <p className="font-mono">{request.amount}</p>
                   <p className="text-muted">{request.method}</p>
-                  <StatusBadge tone={getStatusTone(request.status)}>{request.status}</StatusBadge>
+                  <StatusBadge tone={getStatusTone(request.status)}>
+                    {request.status}
+                  </StatusBadge>
                   <p className="text-muted md:text-right">{request.date}</p>
                 </div>
               ))}
@@ -176,8 +200,12 @@ export default async function WalletPage() {
           ) : null}
         </DashboardCard>
 
-        <DashboardCard description="Your persisted simulated withdrawal requests" title="Withdrawal review queue">
-          {withdrawalState.kind === "ready" && withdrawalState.rows.length > 0 ? (
+        <DashboardCard
+          description="Your persisted simulated withdrawal requests"
+          title="Withdrawal review queue"
+        >
+          {withdrawalState.kind === "ready" &&
+          withdrawalState.rows.length > 0 ? (
             <div className="space-y-3">
               {withdrawalState.rows.map((request) => (
                 <div
@@ -185,15 +213,20 @@ export default async function WalletPage() {
                   key={request.id}
                 >
                   <p className="font-mono">{request.amount}</p>
-                  <StatusBadge tone={getRiskTone(request.risk)}>{request.risk}</StatusBadge>
-                  <StatusBadge tone={getStatusTone(request.status)}>{request.status}</StatusBadge>
+                  <StatusBadge tone={getRiskTone(request.risk)}>
+                    {request.risk}
+                  </StatusBadge>
+                  <StatusBadge tone={getStatusTone(request.status)}>
+                    {request.status}
+                  </StatusBadge>
                   <p className="text-muted md:text-right">{request.date}</p>
                 </div>
               ))}
             </div>
           ) : null}
 
-          {withdrawalState.kind === "ready" && withdrawalState.rows.length === 0 ? (
+          {withdrawalState.kind === "ready" &&
+          withdrawalState.rows.length === 0 ? (
             <EmptyState
               description="Submit a request above and it will appear in the admin withdrawal queue."
               title="No withdrawal requests yet"
@@ -212,16 +245,17 @@ export default async function WalletPage() {
   );
 }
 
-async function getUserDepositRequests(userId: string): Promise<
-  | { kind: "ready"; rows: DepositRequestRow[] }
-  | { kind: "setup-required" }
+async function getUserDepositRequests(
+  userId: string,
+): Promise<
+  { kind: "ready"; rows: DepositRequestRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(depositRequests)
-      .where(and(eq(depositRequests.userId, userId)))
-      .orderBy(desc(depositRequests.requestedAt));
+      .from(depositRequestsSchema)
+      .where(and(eq(depositRequestsSchema.userId, userId)))
+      .orderBy(desc(depositRequestsSchema.requestedAt));
 
     return {
       kind: "ready",
@@ -238,16 +272,17 @@ async function getUserDepositRequests(userId: string): Promise<
   }
 }
 
-async function getUserWithdrawalRequests(userId: string): Promise<
-  | { kind: "ready"; rows: WithdrawalRequestRow[] }
-  | { kind: "setup-required" }
+async function getUserWithdrawalRequests(
+  userId: string,
+): Promise<
+  { kind: "ready"; rows: WithdrawalRequestRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(withdrawalRequests)
-      .where(and(eq(withdrawalRequests.userId, userId)))
-      .orderBy(desc(withdrawalRequests.requestedAt));
+      .from(withdrawalRequestsSchema)
+      .where(and(eq(withdrawalRequestsSchema.userId, userId)))
+      .orderBy(desc(withdrawalRequestsSchema.requestedAt));
 
     return {
       kind: "ready",

@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { depositRequests } from "@/db/schema";
+import { depositRequestsSchema } from "@/db/schema/wallet.schema";
 import {
   ActionToolbar,
   AdminCard,
@@ -10,10 +10,7 @@ import {
   type DataTableColumn,
 } from "@/components/admin-shell";
 import { desc } from "drizzle-orm";
-import {
-  approveDepositAction,
-  rejectDepositAction,
-} from "./actions";
+import { approveDepositAction, rejectDepositAction } from "./actions";
 
 type DepositRow = {
   id: string;
@@ -39,11 +36,17 @@ const depositColumns = [
   },
   {
     header: "Status",
-    cell: (request) => <StatusBadge tone={getStatusTone(request.status)}>{request.status}</StatusBadge>,
+    cell: (request) => (
+      <StatusBadge tone={getStatusTone(request.status)}>
+        {request.status}
+      </StatusBadge>
+    ),
   },
   {
     header: "Requested",
-    cell: (request) => <span className="font-mono text-muted">{request.date}</span>,
+    cell: (request) => (
+      <span className="font-mono text-muted">{request.date}</span>
+    ),
   },
   {
     header: "Actions",
@@ -60,7 +63,10 @@ export default async function AdminDepositsPage() {
         description="Simulated deposit review with persisted approve and reject decisions."
         title="Deposits"
       />
-      <AdminCard description="Incoming simulated funds" title="Deposit approvals">
+      <AdminCard
+        description="Incoming simulated funds"
+        title="Deposit approvals"
+      >
         {state.kind === "ready" && state.rows.length > 0 ? (
           <DataTable
             columns={depositColumns}
@@ -97,13 +103,19 @@ function DepositActions({ request }: { request: DepositRow }) {
     <ActionToolbar>
       <form action={approveDepositAction}>
         <input name="depositId" type="hidden" value={request.id} />
-        <button className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300" type="submit">
+        <button
+          className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
+          type="submit"
+        >
           Approve
         </button>
       </form>
       <form action={rejectDepositAction}>
         <input name="depositId" type="hidden" value={request.id} />
-        <button className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400" type="submit">
+        <button
+          className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400"
+          type="submit"
+        >
           Reject
         </button>
       </form>
@@ -112,14 +124,13 @@ function DepositActions({ request }: { request: DepositRow }) {
 }
 
 async function getDepositRows(): Promise<
-  | { kind: "ready"; rows: DepositRow[] }
-  | { kind: "setup-required" }
+  { kind: "ready"; rows: DepositRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(depositRequests)
-      .orderBy(desc(depositRequests.requestedAt));
+      .from(depositRequestsSchema)
+      .orderBy(desc(depositRequestsSchema.requestedAt));
 
     return {
       kind: "ready",

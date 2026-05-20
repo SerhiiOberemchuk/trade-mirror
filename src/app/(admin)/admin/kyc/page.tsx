@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { kycRequests } from "@/db/schema";
+import { kycRequestsSchema } from "@/db/schema/kyc.schema";
 import {
   ActionToolbar,
   AdminCard,
@@ -10,10 +10,7 @@ import {
   type DataTableColumn,
 } from "@/components/admin-shell";
 import { desc } from "drizzle-orm";
-import {
-  approveKycRequestAction,
-  rejectKycRequestAction,
-} from "./actions";
+import { approveKycRequestAction, rejectKycRequestAction } from "./actions";
 
 type KycReviewRow = {
   id: string;
@@ -46,17 +43,25 @@ const kycColumns = [
     cell: (request) => (
       <div>
         <p>{formatDocumentType(request.documentType)}</p>
-        <p className="mt-1 font-mono text-xs text-muted">{request.documentReference}</p>
+        <p className="mt-1 font-mono text-xs text-muted">
+          {request.documentReference}
+        </p>
       </div>
     ),
   },
   {
     header: "Status",
-    cell: (request) => <StatusBadge tone={getStatusTone(request.status)}>{request.status}</StatusBadge>,
+    cell: (request) => (
+      <StatusBadge tone={getStatusTone(request.status)}>
+        {request.status}
+      </StatusBadge>
+    ),
   },
   {
     header: "Submitted",
-    cell: (request) => <span className="font-mono text-muted">{request.submitted}</span>,
+    cell: (request) => (
+      <span className="font-mono text-muted">{request.submitted}</span>
+    ),
   },
   {
     header: "Actions",
@@ -74,7 +79,10 @@ export default async function AdminKycPage() {
         title="KYC Review"
       />
 
-      <AdminCard description="Pending and reviewed verification requests" title="Verification queue">
+      <AdminCard
+        description="Pending and reviewed verification requests"
+        title="Verification queue"
+      >
         {state.kind === "ready" && state.rows.length > 0 ? (
           <DataTable
             columns={kycColumns}
@@ -123,14 +131,20 @@ function KycActions({ request }: { request: KycReviewRow }) {
       <ActionToolbar>
         <form action={approveKycRequestAction} id={`approve-${request.id}`}>
           <input name="requestId" type="hidden" value={request.id} />
-          <button className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300" type="submit">
+          <button
+            className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
+            type="submit"
+          >
             Approve
           </button>
         </form>
         <form action={rejectKycRequestAction}>
           <input name="requestId" type="hidden" value={request.id} />
           <input name="reviewNote" type="hidden" value="Rejected by admin." />
-          <button className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400" type="submit">
+          <button
+            className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400"
+            type="submit"
+          >
             Reject
           </button>
         </form>
@@ -140,14 +154,13 @@ function KycActions({ request }: { request: KycReviewRow }) {
 }
 
 async function getKycReviewRows(): Promise<
-  | { kind: "ready"; rows: KycReviewRow[] }
-  | { kind: "setup-required" }
+  { kind: "ready"; rows: KycReviewRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(kycRequests)
-      .orderBy(desc(kycRequests.submittedAt));
+      .from(kycRequestsSchema)
+      .orderBy(desc(kycRequestsSchema.submittedAt));
 
     return {
       kind: "ready",

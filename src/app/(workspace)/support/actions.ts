@@ -1,15 +1,19 @@
 "use server";
 
 import { db } from "@/db";
-import { supportTickets } from "@/db/schema";
+import {
+  supportTicketPriorityEnum,
+  supportTicketsSchema,
+} from "@/db/schema/support.schema";
+import { CACHE_TAGS, cacheTags } from "@/lib/cache-tags";
 import { requireSession } from "@/server/auth/session";
-import { revalidatePath } from "next/cache";
+import { invalidateAfterMutation } from "@/server/cache/revalidation";
 
 const SUPPORT_PATH = "/support";
 const ADMIN_SUPPORT_PATH = "/admin/support";
-const VALID_PRIORITIES = ["low", "medium", "high"] as const;
 
-type SupportTicketPriority = (typeof VALID_PRIORITIES)[number];
+type SupportTicketPriority =
+  (typeof supportTicketPriorityEnum.enumValues)[number];
 
 export async function createSupportTicketAction(formData: FormData) {
   const session = await requireSession();
@@ -29,7 +33,7 @@ export async function createSupportTicketAction(formData: FormData) {
     throw new Error("Support ticket priority is invalid.");
   }
 
-  await db.insert(supportTickets).values({
+  await db.insert(supportTicketsSchema).values({
     message,
     priority,
     subject,
@@ -38,10 +42,16 @@ export async function createSupportTicketAction(formData: FormData) {
     userName: session.user.name,
   });
 
-  revalidatePath(SUPPORT_PATH);
-  revalidatePath(ADMIN_SUPPORT_PATH);
+  invalidateAfterMutation({
+    paths: [SUPPORT_PATH, ADMIN_SUPPORT_PATH],
+    tags: [cacheTags.userSupport(session.user.id), CACHE_TAGS.adminSupport],
+  });
 }
 
-function isSupportTicketPriority(priority: string): priority is SupportTicketPriority {
-  return VALID_PRIORITIES.includes(priority as SupportTicketPriority);
+function isSupportTicketPriority(
+  priority: string,
+): priority is SupportTicketPriority {
+  return supportTicketPriorityEnum.enumValues.includes(
+    priority as SupportTicketPriority,
+  );
 }

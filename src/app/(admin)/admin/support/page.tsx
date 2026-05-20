@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { supportTickets } from "@/db/schema";
+import { supportTicketsSchema } from "@/db/schema/support.schema";
 import {
   ActionToolbar,
   AdminCard,
@@ -33,7 +33,9 @@ const supportColumns = [
     cell: (ticket) => (
       <div className="max-w-sm">
         <p className="font-medium">{ticket.subject}</p>
-        <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">{ticket.message}</p>
+        <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
+          {ticket.message}
+        </p>
       </div>
     ),
   },
@@ -43,15 +45,25 @@ const supportColumns = [
   },
   {
     header: "Priority",
-    cell: (ticket) => <StatusBadge tone={getPriorityTone(ticket.priority)}>{ticket.priority}</StatusBadge>,
+    cell: (ticket) => (
+      <StatusBadge tone={getPriorityTone(ticket.priority)}>
+        {ticket.priority}
+      </StatusBadge>
+    ),
   },
   {
     header: "Status",
-    cell: (ticket) => <StatusBadge tone={getStatusTone(ticket.status)}>{ticket.status}</StatusBadge>,
+    cell: (ticket) => (
+      <StatusBadge tone={getStatusTone(ticket.status)}>
+        {ticket.status}
+      </StatusBadge>
+    ),
   },
   {
     header: "Updated",
-    cell: (ticket) => <span className="font-mono text-muted">{ticket.updated}</span>,
+    cell: (ticket) => (
+      <span className="font-mono text-muted">{ticket.updated}</span>
+    ),
   },
   {
     header: "Actions",
@@ -110,7 +122,10 @@ function SupportTicketActions({ ticket }: { ticket: SupportTicketRow }) {
           name="adminReply"
           placeholder="Write admin reply"
         />
-        <button className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300" type="submit">
+        <button
+          className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300"
+          type="submit"
+        >
           Reply
         </button>
       </form>
@@ -119,14 +134,20 @@ function SupportTicketActions({ ticket }: { ticket: SupportTicketRow }) {
         {ticket.status === "closed" ? (
           <form action={reopenSupportTicketAction}>
             <input name="ticketId" type="hidden" value={ticket.id} />
-            <button className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300" type="submit">
+            <button
+              className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300"
+              type="submit"
+            >
               Reopen
             </button>
           </form>
         ) : (
           <form action={closeSupportTicketAction}>
             <input name="ticketId" type="hidden" value={ticket.id} />
-            <button className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300" type="submit">
+            <button
+              className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
+              type="submit"
+            >
               Close
             </button>
           </form>
@@ -137,14 +158,13 @@ function SupportTicketActions({ ticket }: { ticket: SupportTicketRow }) {
 }
 
 async function getSupportTicketRows(): Promise<
-  | { kind: "ready"; rows: SupportTicketRow[] }
-  | { kind: "setup-required" }
+  { kind: "ready"; rows: SupportTicketRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(supportTickets)
-      .orderBy(desc(supportTickets.updatedAt));
+      .from(supportTicketsSchema)
+      .orderBy(desc(supportTicketsSchema.updatedAt));
 
     return {
       kind: "ready",

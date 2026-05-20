@@ -2,115 +2,125 @@
 
 import { db } from "@/db";
 import {
-  simulatedPositions,
-  simulatedTrades,
-  tradingPairs,
-} from "@/db/schema";
+  simulatedPositionsSchema,
+  simulatedTradesSchema,
+} from "@/db/schema/trading.schema";
+import { tradingPairsSchema } from "@/db/schema/trading-pairs.schema";
 import { requireSession } from "@/server/auth/session";
 import { getBinanceTickerSnapshot } from "@/server/market-data/binance";
+import {
+  createCopiedPositionsForFollowers,
+  closeCopiedPositions,
+} from "@/server/trading/copy-automation";
+import { closePositionAtPrice } from "@/server/trading/position-lifecycle";
+import { checkRiskExitsForUser } from "@/server/trading/risk-exits";
+import { revalidateTradingPaths } from "@/server/trading/revalidation";
+import {
+  parseOrderInput,
+  parsePositionId,
+  validateRiskThresholds,
+} from "@/server/trading/validation";
 import { and, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
-
-const TERMINAL_PATH = "/terminal";
-const HISTORY_PATH = "/history";
-const ADMIN_TRADES_PATH = "/admin/trades";
-const MIN_NOTIONAL_CENTS = 1_000;
-const MAX_NOTIONAL_CENTS = 100_000_00;
-const VALID_SIDES = ["long", "short"] as const;
-
-type PositionSide = (typeof VALID_SIDES)[number];
 
 export async function createSimulatedOrderAction(formData: FormData) {
   const session = await requireSession();
-  const pairSymbol = String(formData.get("pairSymbol") ?? "").trim().toUpperCase();
-  const side = String(formData.get("side") ?? "long");
-  const notional = Number(formData.get("notional"));
-  const leverage = Number(formData.get("leverage"));
-
-  if (!pairSymbol) {
-    throw new Error("Trading pair is required.");
-  }
-
-  if (!isPositionSide(side)) {
-    throw new Error("Position side is invalid.");
-  }
-
-  if (!Number.isFinite(notional)) {
-    throw new Error("Order notional is invalid.");
-  }
-
-  const notionalCents = Math.round(notional * 100);
-
-  if (notionalCents < MIN_NOTIONAL_CENTS || notionalCents > MAX_NOTIONAL_CENTS) {
-    throw new Error("Order notional must be between $10.00 and $100,000.00.");
-  }
-
-  if (!Number.isInteger(leverage) || leverage < 1) {
-    throw new Error("Leverage is invalid.");
-  }
+  const order = parseOrderInput(formData);
 
   const [pair] = await db
     .select()
-    .from(tradingPairs)
-    .where(and(eq(tradingPairs.symbol, pairSymbol), eq(tradingPairs.status, "enabled")))
+    .from(tradingPairsSchema)
+    .where(
+      and(
+        eq(tradingPairsSchema.symbol, order.pairSymbol),
+        eq(tradingPairsSchema.status, "enabled"),
+      ),
+    )
     .limit(1);
 
   if (!pair) {
     throw new Error("Trading pair is not enabled.");
   }
 
-  if (leverage > pair.maxLeverage) {
-    throw new Error(`Leverage cannot exceed ${pair.maxLeverage}x for ${pair.symbol}.`);
+  if (order.leverage > pair.maxLeverage) {
+    throw new Error(
+      `Leverage cannot exceed ${pair.maxLeverage}x for ${pair.symbol}.`,
+    );
   }
 
   const ticker = await getBinanceTickerSnapshot(pair.symbol);
+  validateRiskThresholds({
+    currentPriceCents: ticker.priceCents,
+    side: order.side,
+    stopLossPriceCents: order.stopLossPriceCents,
+    takeProfitPriceCents: order.takeProfitPriceCents,
+  });
+
   const [position] = await db
-    .insert(simulatedPositions)
+    .insert(simulatedPositionsSchema)
     .values({
       entryPriceCents: ticker.priceCents,
-      leverage,
-      notionalCents,
+      leverage: order.leverage,
+      notionalCents: order.notionalCents,
       pairSymbol: pair.symbol,
-      side,
+      side: order.side,
       source: "manual",
+      stopLossPriceCents: order.stopLossPriceCents,
+      takeProfitPriceCents: order.takeProfitPriceCents,
       userEmail: session.user.email,
       userId: session.user.id,
       userName: session.user.name,
     })
-    .returning({ id: simulatedPositions.id });
+    .returning({ id: simulatedPositionsSchema.id });
 
-  await db.insert(simulatedTrades).values({
+  await db.insert(simulatedTradesSchema).values({
     action: "open",
-    notionalCents,
+    notionalCents: order.notionalCents,
     pairSymbol: pair.symbol,
     positionId: position.id,
     priceCents: ticker.priceCents,
-    side,
+    side: order.side,
     source: "manual",
     userEmail: session.user.email,
     userId: session.user.id,
     userName: session.user.name,
   });
 
-  revalidateTradingPaths();
+  await createCopiedPositionsForFollowers({
+    entryPriceCents: ticker.priceCents,
+    leverage: order.leverage,
+    pairSymbol: pair.symbol,
+    providerPositionId: position.id,
+    providerUserId: session.user.id,
+    side: order.side,
+    stopLossPriceCents: order.stopLossPriceCents,
+    takeProfitPriceCents: order.takeProfitPriceCents,
+  });
+
+  revalidateTradingPaths(session.user.id);
+}
+
+export async function checkRiskExitsAction() {
+  const session = await requireSession();
+
+  await checkRiskExitsForUser({
+    userId: session.user.id,
+  });
+
+  revalidateTradingPaths(session.user.id);
 }
 
 export async function closeSimulatedPositionAction(formData: FormData) {
   const session = await requireSession();
-  const positionId = String(formData.get("positionId") ?? "");
-
-  if (!positionId) {
-    throw new Error("Invalid position close request.");
-  }
+  const positionId = parsePositionId(formData);
 
   const [position] = await db
     .select()
-    .from(simulatedPositions)
+    .from(simulatedPositionsSchema)
     .where(
       and(
-        eq(simulatedPositions.id, positionId),
-        eq(simulatedPositions.userId, session.user.id),
-        eq(simulatedPositions.status, "open"),
+        eq(simulatedPositionsSchema.id, positionId),
+        eq(simulatedPositionsSchema.userId, session.user.id),
+        eq(simulatedPositionsSchema.status, "open"),
       ),
     )
     .limit(1);
@@ -120,63 +130,20 @@ export async function closeSimulatedPositionAction(formData: FormData) {
   }
 
   const ticker = await getBinanceTickerSnapshot(position.pairSymbol);
-  const pnlCents = calculatePnlCents({
+
+  await closePositionAtPrice({
     currentPriceCents: ticker.priceCents,
-    entryPriceCents: position.entryPriceCents,
-    notionalCents: position.notionalCents,
-    side: position.side,
-  });
-
-  await db
-    .update(simulatedPositions)
-    .set({
-      closedAt: new Date(),
-      closedPriceCents: ticker.priceCents,
-      realizedPnlCents: pnlCents,
-      status: "closed",
-    })
-    .where(eq(simulatedPositions.id, position.id));
-
-  await db.insert(simulatedTrades).values({
-    action: "close",
-    notionalCents: position.notionalCents,
-    pairSymbol: position.pairSymbol,
-    pnlCents,
-    positionId: position.id,
-    priceCents: ticker.priceCents,
-    side: position.side,
-    source: position.source,
+    position,
     userEmail: session.user.email,
-    userId: session.user.id,
     userName: session.user.name,
   });
 
-  revalidateTradingPaths();
-}
+  if (position.source === "manual") {
+    await closeCopiedPositions({
+      copiedFromPositionId: position.id,
+      currentPriceCents: ticker.priceCents,
+    });
+  }
 
-function calculatePnlCents({
-  currentPriceCents,
-  entryPriceCents,
-  notionalCents,
-  side,
-}: {
-  currentPriceCents: number;
-  entryPriceCents: number;
-  notionalCents: number;
-  side: PositionSide;
-}) {
-  const priceMove = (currentPriceCents - entryPriceCents) / entryPriceCents;
-  const directionalMove = side === "long" ? priceMove : -priceMove;
-
-  return Math.round(notionalCents * directionalMove);
-}
-
-function isPositionSide(side: string): side is PositionSide {
-  return VALID_SIDES.includes(side as PositionSide);
-}
-
-function revalidateTradingPaths() {
-  revalidatePath(TERMINAL_PATH);
-  revalidatePath(HISTORY_PATH);
-  revalidatePath(ADMIN_TRADES_PATH);
+  revalidateTradingPaths(session.user.id);
 }

@@ -1,22 +1,24 @@
 "use server";
 
 import { db } from "@/db";
-import { kycRequests } from "@/db/schema";
+import { kycDocumentTypeEnum, kycRequestsSchema } from "@/db/schema/kyc.schema";
+import { CACHE_TAGS, cacheTags } from "@/lib/cache-tags";
 import { requireSession } from "@/server/auth/session";
-import { revalidatePath } from "next/cache";
+import { invalidateAfterMutation } from "@/server/cache/revalidation";
 
 const VERIFICATION_PATH = "/verification";
 const ADMIN_KYC_PATH = "/admin/kyc";
-const VALID_DOCUMENT_TYPES = ["identity", "address", "business"] as const;
 
-type KycDocumentType = (typeof VALID_DOCUMENT_TYPES)[number];
+type KycDocumentType = (typeof kycDocumentTypeEnum.enumValues)[number];
 
 export async function submitKycRequestAction(formData: FormData) {
   const session = await requireSession();
   const legalName = String(formData.get("legalName") ?? "").trim();
   const country = String(formData.get("country") ?? "").trim();
   const documentType = String(formData.get("documentType") ?? "identity");
-  const documentReference = String(formData.get("documentReference") ?? "").trim();
+  const documentReference = String(
+    formData.get("documentReference") ?? "",
+  ).trim();
 
   if (legalName.length < 3 || legalName.length > 120) {
     throw new Error("Legal name must be 3-120 characters.");
@@ -34,7 +36,7 @@ export async function submitKycRequestAction(formData: FormData) {
     throw new Error("Document reference must be 4-160 characters.");
   }
 
-  await db.insert(kycRequests).values({
+  await db.insert(kycRequestsSchema).values({
     country,
     documentReference,
     documentType,
@@ -44,10 +46,16 @@ export async function submitKycRequestAction(formData: FormData) {
     userName: session.user.name,
   });
 
-  revalidatePath(VERIFICATION_PATH);
-  revalidatePath(ADMIN_KYC_PATH);
+  invalidateAfterMutation({
+    paths: [VERIFICATION_PATH, ADMIN_KYC_PATH],
+    tags: [cacheTags.userVerification(session.user.id), CACHE_TAGS.adminKyc],
+  });
 }
 
-function isKycDocumentType(documentType: string): documentType is KycDocumentType {
-  return VALID_DOCUMENT_TYPES.includes(documentType as KycDocumentType);
+function isKycDocumentType(
+  documentType: string,
+): documentType is KycDocumentType {
+  return kycDocumentTypeEnum.enumValues.includes(
+    documentType as KycDocumentType,
+  );
 }

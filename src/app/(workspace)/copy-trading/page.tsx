@@ -1,5 +1,9 @@
 import { db } from "@/db";
-import { copySettings, traderProfiles } from "@/db/schema";
+import {
+  copySettingsSchema,
+  traderProfilesSchema,
+} from "@/db/schema/copy-trading.schema";
+import { simulatedTradesSchema } from "@/db/schema/trading.schema";
 import { ActionToolbar } from "@/components/dashboard/primitives";
 import {
   DashboardCard,
@@ -9,11 +13,8 @@ import {
   StatusBadge,
 } from "@/components/dashboard-shell";
 import { requireSession } from "@/server/auth/session";
-import { desc, eq } from "drizzle-orm";
-import {
-  pauseCopySettingAction,
-  resumeCopySettingAction,
-} from "./actions";
+import { and, desc, eq } from "drizzle-orm";
+import { pauseCopySettingAction, resumeCopySettingAction } from "./actions";
 
 type CopyAllocationRow = {
   id: string;
@@ -38,13 +39,29 @@ export default async function CopyTradingPage() {
   const stats =
     state.kind === "ready"
       ? [
-          { label: "Active providers", value: String(state.activeCount), change: `${state.pausedCount} paused` },
-          { label: "Allocated capital", value: formatMoney(state.allocatedCents, "USD"), change: "simulated" },
-          { label: "Copy PnL", value: "+$0.00", change: "pending copy engine" },
+          {
+            label: "Active providers",
+            value: String(state.activeCount),
+            change: `${state.pausedCount} paused`,
+          },
+          {
+            label: "Allocated capital",
+            value: formatMoney(state.allocatedCents, "USD"),
+            change: "simulated",
+          },
+          {
+            label: "Copy PnL",
+            value: formatSignedMoney(state.copyPnlCents, "USD"),
+            change: "from copied closes",
+          },
         ]
       : [
           { label: "Active providers", value: "n/a", change: "setup required" },
-          { label: "Allocated capital", value: "n/a", change: "setup required" },
+          {
+            label: "Allocated capital",
+            value: "n/a",
+            change: "setup required",
+          },
           { label: "Copy PnL", value: "n/a", change: "setup required" },
         ];
 
@@ -57,19 +74,36 @@ export default async function CopyTradingPage() {
 
       <section className="grid gap-4 md:grid-cols-3">
         {stats.map((stat) => (
-          <StatTile change={stat.change} key={stat.label} label={stat.label} value={stat.value} />
+          <StatTile
+            change={stat.change}
+            key={stat.label}
+            label={stat.label}
+            value={stat.value}
+          />
         ))}
       </section>
 
       <section className="mt-6 grid gap-5 xl:grid-cols-[1fr_0.85fr]">
-        <DashboardCard description="Persisted copy relationships" title="Allocations">
+        <DashboardCard
+          description="Persisted copy relationships"
+          title="Allocations"
+        >
           {state.kind === "ready" && state.allocations.length > 0 ? (
             <div className="space-y-3">
               {state.allocations.map((allocation) => (
-                <div className="rounded-lg border border-border bg-background p-4" key={allocation.id}>
+                <div
+                  className="rounded-lg border border-border bg-background p-4"
+                  key={allocation.id}
+                >
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-medium">{allocation.trader}</p>
-                    <StatusBadge tone={allocation.status === "active" ? "success" : "warning"}>{allocation.status}</StatusBadge>
+                    <StatusBadge
+                      tone={
+                        allocation.status === "active" ? "success" : "warning"
+                      }
+                    >
+                      {allocation.status}
+                    </StatusBadge>
                   </div>
                   <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
                     <Metric label="Capital" value={allocation.allocation} />
@@ -99,11 +133,17 @@ export default async function CopyTradingPage() {
           ) : null}
         </DashboardCard>
 
-        <DashboardCard description="Published providers ordered by simulated monthly PnL" title="Suggested traders">
+        <DashboardCard
+          description="Published providers ordered by simulated monthly PnL"
+          title="Suggested traders"
+        >
           {state.kind === "ready" && state.suggested.length > 0 ? (
             <div className="space-y-3">
               {state.suggested.map((trader) => (
-                <div className="flex items-center justify-between rounded-lg border border-border bg-background px-4 py-3" key={trader.id}>
+                <div
+                  className="flex items-center justify-between rounded-lg border border-border bg-background px-4 py-3"
+                  key={trader.id}
+                >
                   <div>
                     <p className="font-medium">{trader.name}</p>
                     <p className="mt-1 text-sm text-muted">{trader.strategy}</p>
@@ -127,20 +167,30 @@ export default async function CopyTradingPage() {
   );
 }
 
-function CopyAllocationActions({ allocation }: { allocation: CopyAllocationRow }) {
+function CopyAllocationActions({
+  allocation,
+}: {
+  allocation: CopyAllocationRow;
+}) {
   return (
     <ActionToolbar>
       {allocation.status === "active" ? (
         <form action={pauseCopySettingAction}>
           <input name="settingId" type="hidden" value={allocation.id} />
-          <button className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300" type="submit">
+          <button
+            className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300"
+            type="submit"
+          >
             Pause
           </button>
         </form>
       ) : (
         <form action={resumeCopySettingAction}>
           <input name="settingId" type="hidden" value={allocation.id} />
-          <button className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300" type="submit">
+          <button
+            className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
+            type="submit"
+          >
             Resume
           </button>
         </form>
@@ -157,26 +207,43 @@ async function getCopyTradingState(userId: string): Promise<
       activeCount: number;
       pausedCount: number;
       allocatedCents: number;
+      copyPnlCents: number;
     }
   | { kind: "setup-required" }
 > {
   try {
-    const [settingsRows, profileRows] = await Promise.all([
+    const [settingsRows, profileRows, copyTradeRows] = await Promise.all([
       db
         .select()
-        .from(copySettings)
-        .where(eq(copySettings.followerUserId, userId))
-        .orderBy(desc(copySettings.updatedAt)),
+        .from(copySettingsSchema)
+        .where(eq(copySettingsSchema.followerUserId, userId))
+        .orderBy(desc(copySettingsSchema.updatedAt)),
       db
         .select()
-        .from(traderProfiles)
-        .where(eq(traderProfiles.status, "published"))
-        .orderBy(desc(traderProfiles.monthlyPnlBps)),
+        .from(traderProfilesSchema)
+        .where(eq(traderProfilesSchema.status, "published"))
+        .orderBy(desc(traderProfilesSchema.monthlyPnlBps)),
+      db
+        .select()
+        .from(simulatedTradesSchema)
+        .where(
+          and(
+            eq(simulatedTradesSchema.userId, userId),
+            eq(simulatedTradesSchema.source, "copy"),
+          ),
+        ),
     ]);
 
     return {
       activeCount: settingsRows.filter((row) => row.status === "active").length,
-      allocatedCents: settingsRows.reduce((total, row) => total + row.allocationCents, 0),
+      allocatedCents: settingsRows.reduce(
+        (total, row) => total + row.allocationCents,
+        0,
+      ),
+      copyPnlCents: copyTradeRows.reduce(
+        (total, row) => total + row.pnlCents,
+        0,
+      ),
       allocations: settingsRows.map((row) => ({
         allocation: formatMoney(row.allocationCents, "USD"),
         copyRatio: formatBps(row.copyRatioBps),
@@ -213,6 +280,12 @@ function formatMoney(amountCents: number, currency: string) {
     currency,
     style: "currency",
   }).format(amountCents / 100);
+}
+
+function formatSignedMoney(amountCents: number, currency: string) {
+  const value = formatMoney(Math.abs(amountCents), currency);
+
+  return `${amountCents >= 0 ? "+" : "-"}${value}`;
 }
 
 function formatBps(value: number) {

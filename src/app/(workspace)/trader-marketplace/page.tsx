@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { traderProfiles } from "@/db/schema";
+import { traderProfilesSchema } from "@/db/schema/copy-trading.schema";
 import {
   DashboardCard,
   DashboardPageHeader,
@@ -7,10 +7,7 @@ import {
   StatusBadge,
 } from "@/components/dashboard-shell";
 import { desc, eq } from "drizzle-orm";
-import {
-  publishTraderProfileAction,
-  startCopyTradingAction,
-} from "./actions";
+import { publishTraderProfileAction, startCopyTradingAction } from "./actions";
 
 type TraderProfileRow = {
   id: string;
@@ -34,7 +31,10 @@ export default async function TraderMarketplacePage() {
       />
 
       <section className="grid gap-5 xl:grid-cols-[0.65fr_1.35fr]">
-        <DashboardCard description="Publish a simulated provider profile" title="Publish profile">
+        <DashboardCard
+          description="Publish a simulated provider profile"
+          title="Publish profile"
+        >
           <form action={publishTraderProfileAction} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Display name</span>
@@ -121,17 +121,27 @@ export default async function TraderMarketplacePage() {
           </form>
         </DashboardCard>
 
-        <DashboardCard description="Published simulated copy providers" title="Providers">
+        <DashboardCard
+          description="Published simulated copy providers"
+          title="Providers"
+        >
           {state.kind === "ready" && state.rows.length > 0 ? (
             <div className="grid gap-4 lg:grid-cols-2">
               {state.rows.map((trader) => (
-                <article className="rounded-lg border border-border bg-background p-5" key={trader.id}>
+                <article
+                  className="rounded-lg border border-border bg-background p-5"
+                  key={trader.id}
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <h2 className="font-semibold">{trader.name}</h2>
-                      <p className="mt-1 text-sm text-muted">{trader.strategy}</p>
+                      <p className="mt-1 text-sm text-muted">
+                        {trader.strategy}
+                      </p>
                     </div>
-                    <StatusBadge tone={getRiskTone(trader.risk)}>{trader.risk}</StatusBadge>
+                    <StatusBadge tone={getRiskTone(trader.risk)}>
+                      {trader.risk}
+                    </StatusBadge>
                   </div>
                   <div className="mt-5 grid grid-cols-4 gap-3 text-sm">
                     <Metric label="PnL" tone="success" value={trader.pnl} />
@@ -139,8 +149,15 @@ export default async function TraderMarketplacePage() {
                     <Metric label="Followers" value={trader.followers} />
                     <Metric label="DD" value={trader.drawdown} />
                   </div>
-                  <form action={startCopyTradingAction} className="mt-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-                    <input name="traderProfileId" type="hidden" value={trader.id} />
+                  <form
+                    action={startCopyTradingAction}
+                    className="mt-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
+                  >
+                    <input
+                      name="traderProfileId"
+                      type="hidden"
+                      value={trader.id}
+                    />
                     <label className="block">
                       <span className="sr-only">Allocation</span>
                       <input
@@ -164,7 +181,10 @@ export default async function TraderMarketplacePage() {
                         type="number"
                       />
                     </label>
-                    <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300" type="submit">
+                    <button
+                      className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300"
+                      type="submit"
+                    >
                       Copy
                     </button>
                   </form>
@@ -193,21 +213,22 @@ export default async function TraderMarketplacePage() {
 }
 
 async function getTraderProfiles(): Promise<
-  | { kind: "ready"; rows: TraderProfileRow[] }
-  | { kind: "setup-required" }
+  { kind: "ready"; rows: TraderProfileRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(traderProfiles)
-      .where(eq(traderProfiles.status, "published"))
-      .orderBy(desc(traderProfiles.monthlyPnlBps));
+      .from(traderProfilesSchema)
+      .where(eq(traderProfilesSchema.status, "published"))
+      .orderBy(desc(traderProfilesSchema.monthlyPnlBps));
 
     return {
       kind: "ready",
       rows: rows.map((row) => ({
         drawdown: formatBps(row.maxDrawdownBps),
-        followers: new Intl.NumberFormat("en", { notation: "compact" }).format(row.followersCount),
+        followers: new Intl.NumberFormat("en", { notation: "compact" }).format(
+          row.followersCount,
+        ),
         id: row.id,
         name: row.displayName,
         pnl: formatSignedBps(row.monthlyPnlBps),
@@ -233,7 +254,9 @@ function Metric({
   return (
     <div>
       <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
-      <p className={`mt-1 font-mono font-semibold ${tone === "success" ? "text-success" : ""}`}>
+      <p
+        className={`mt-1 font-mono font-semibold ${tone === "success" ? "text-success" : ""}`}
+      >
         {value}
       </p>
     </div>

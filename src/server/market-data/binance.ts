@@ -50,6 +50,20 @@ export async function getBinanceTickerSnapshot(symbol: string): Promise<MarketTi
   };
 }
 
+export async function getBinanceTickerSnapshots(symbols: readonly string[]) {
+  const snapshots = await Promise.all(
+    symbols.map(async (symbol) => {
+      try {
+        return await getBinanceTickerSnapshot(symbol);
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return snapshots.filter((snapshot): snapshot is MarketTickerSnapshot => snapshot !== null);
+}
+
 export function toBinanceSymbol(symbol: string) {
   return symbol.replace("/", "").toUpperCase();
 }

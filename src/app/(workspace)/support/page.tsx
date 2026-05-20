@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { supportTickets } from "@/db/schema";
+import { supportTicketsSchema } from "@/db/schema/support.schema";
 import { requireSession } from "@/server/auth/session";
 import {
   DashboardCard,
@@ -32,7 +32,10 @@ export default async function SupportPage() {
       />
 
       <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-        <DashboardCard description="Create a persisted support request" title="New ticket">
+        <DashboardCard
+          description="Create a persisted support request"
+          title="New ticket"
+        >
           <form action={createSupportTicketAction} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Subject</span>
@@ -78,19 +81,31 @@ export default async function SupportPage() {
           </form>
         </DashboardCard>
 
-        <DashboardCard description="Your persisted support tickets" title="Tickets">
+        <DashboardCard
+          description="Your persisted support tickets"
+          title="Tickets"
+        >
           {state.kind === "ready" && state.rows.length > 0 ? (
             <div className="space-y-3">
               {state.rows.map((ticket) => (
-                <article className="rounded-lg border border-border bg-background p-4" key={ticket.id}>
+                <article
+                  className="rounded-lg border border-border bg-background p-4"
+                  key={ticket.id}
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium">{ticket.subject}</p>
-                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">{ticket.message}</p>
+                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
+                        {ticket.message}
+                      </p>
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
-                      <StatusBadge tone={getPriorityTone(ticket.priority)}>{ticket.priority}</StatusBadge>
-                      <StatusBadge tone={getStatusTone(ticket.status)}>{ticket.status}</StatusBadge>
+                      <StatusBadge tone={getPriorityTone(ticket.priority)}>
+                        {ticket.priority}
+                      </StatusBadge>
+                      <StatusBadge tone={getStatusTone(ticket.status)}>
+                        {ticket.status}
+                      </StatusBadge>
                     </div>
                   </div>
                   {ticket.adminReply ? (
@@ -98,7 +113,9 @@ export default async function SupportPage() {
                       {ticket.adminReply}
                     </div>
                   ) : null}
-                  <p className="mt-3 text-xs text-muted">Updated {ticket.updated}</p>
+                  <p className="mt-3 text-xs text-muted">
+                    Updated {ticket.updated}
+                  </p>
                 </article>
               ))}
             </div>
@@ -123,16 +140,17 @@ export default async function SupportPage() {
   );
 }
 
-async function getUserSupportTickets(userId: string): Promise<
-  | { kind: "ready"; rows: SupportTicketRow[] }
-  | { kind: "setup-required" }
+async function getUserSupportTickets(
+  userId: string,
+): Promise<
+  { kind: "ready"; rows: SupportTicketRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(supportTickets)
-      .where(eq(supportTickets.userId, userId))
-      .orderBy(desc(supportTickets.updatedAt));
+      .from(supportTicketsSchema)
+      .where(eq(supportTicketsSchema.userId, userId))
+      .orderBy(desc(supportTicketsSchema.updatedAt));
 
     return {
       kind: "ready",

@@ -1,19 +1,23 @@
 "use server";
 
 import { db } from "@/db";
-import { copySettings, traderProfiles } from "@/db/schema";
+import {
+  copySettingsSchema,
+  traderProfileRiskLevelEnum,
+  traderProfilesSchema,
+} from "@/db/schema/copy-trading.schema";
+import { CACHE_TAGS, cacheTags } from "@/lib/cache-tags";
 import { requireSession } from "@/server/auth/session";
+import { invalidateAfterMutation } from "@/server/cache/revalidation";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 
 const MARKETPLACE_PATH = "/trader-marketplace";
 const COPY_TRADING_PATH = "/copy-trading";
 const ADMIN_COPY_TRADING_PATH = "/admin/copy-trading";
-const VALID_RISK_LEVELS = ["low", "medium", "high"] as const;
 const MIN_ALLOCATION_CENTS = 1_000;
 const MAX_ALLOCATION_CENTS = 100_000_00;
 
-type TraderRiskLevel = (typeof VALID_RISK_LEVELS)[number];
+type TraderRiskLevel = (typeof traderProfileRiskLevelEnum.enumValues)[number];
 
 export async function publishTraderProfileAction(formData: FormData) {
   const session = await requireSession();
@@ -48,7 +52,7 @@ export async function publishTraderProfileAction(formData: FormData) {
     throw new Error("Max drawdown must be between 0% and 100%.");
   }
 
-  await db.insert(traderProfiles).values({
+  await db.insert(traderProfilesSchema).values({
     displayName,
     maxDrawdownBps: Math.round(maxDrawdown * 100),
     monthlyPnlBps: Math.round(monthlyPnl * 100),
@@ -60,7 +64,7 @@ export async function publishTraderProfileAction(formData: FormData) {
     winRateBps: Math.round(winRate * 100),
   });
 
-  revalidateCopyPaths();
+  revalidateCopyPaths(session.user.id);
 }
 
 export async function startCopyTradingAction(formData: FormData) {
@@ -79,7 +83,10 @@ export async function startCopyTradingAction(formData: FormData) {
 
   const allocationCents = Math.round(allocation * 100);
 
-  if (allocationCents < MIN_ALLOCATION_CENTS || allocationCents > MAX_ALLOCATION_CENTS) {
+  if (
+    allocationCents < MIN_ALLOCATION_CENTS ||
+    allocationCents > MAX_ALLOCATION_CENTS
+  ) {
     throw new Error("Copy allocation must be between $10.00 and $100,000.00.");
   }
 
@@ -89,15 +96,15 @@ export async function startCopyTradingAction(formData: FormData) {
 
   const [profile] = await db
     .select()
-    .from(traderProfiles)
-    .where(eq(traderProfiles.id, traderProfileId))
+    .from(traderProfilesSchema)
+    .where(eq(traderProfilesSchema.id, traderProfileId))
     .limit(1);
 
   if (!profile || profile.status !== "published") {
     throw new Error("Trader profile is not available for copying.");
   }
 
-  await db.insert(copySettings).values({
+  await db.insert(copySettingsSchema).values({
     allocationCents,
     copyRatioBps: Math.round(copyRatio * 100),
     followerEmail: session.user.email,
@@ -108,26 +115,33 @@ export async function startCopyTradingAction(formData: FormData) {
   });
 
   await db
-    .update(traderProfiles)
+    .update(traderProfilesSchema)
     .set({
       followersCount: profile.followersCount + 1,
       updatedAt: new Date(),
     })
-    .where(eq(traderProfiles.id, profile.id));
+    .where(eq(traderProfilesSchema.id, profile.id));
 
-  revalidateCopyPaths();
+  revalidateCopyPaths(session.user.id);
 }
 
 function isRiskLevel(riskLevel: string): riskLevel is TraderRiskLevel {
-  return VALID_RISK_LEVELS.includes(riskLevel as TraderRiskLevel);
+  return traderProfileRiskLevelEnum.enumValues.includes(
+    riskLevel as TraderRiskLevel,
+  );
 }
 
 function isPercentMetric(value: number, min: number, max: number) {
   return Number.isFinite(value) && value >= min && value <= max;
 }
 
-function revalidateCopyPaths() {
-  revalidatePath(MARKETPLACE_PATH);
-  revalidatePath(COPY_TRADING_PATH);
-  revalidatePath(ADMIN_COPY_TRADING_PATH);
+function revalidateCopyPaths(userId: string) {
+  invalidateAfterMutation({
+    paths: [MARKETPLACE_PATH, COPY_TRADING_PATH, ADMIN_COPY_TRADING_PATH],
+    tags: [
+      CACHE_TAGS.traderMarketplace,
+      CACHE_TAGS.adminCopyTrading,
+      cacheTags.userCopyTrading(userId),
+    ],
+  });
 }

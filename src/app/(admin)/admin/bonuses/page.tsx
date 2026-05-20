@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { bonusCampaigns } from "@/db/schema";
+import { bonusCampaignsSchema } from "@/db/schema/bonuses.schema";
 import {
   ActionToolbar,
   AdminCard,
@@ -55,7 +55,9 @@ const bonusColumns = [
   },
   {
     header: "Updated",
-    cell: (campaign) => <span className="font-mono text-muted">{campaign.updated}</span>,
+    cell: (campaign) => (
+      <span className="font-mono text-muted">{campaign.updated}</span>
+    ),
   },
   {
     header: "Actions",
@@ -74,7 +76,10 @@ export default async function AdminBonusesPage() {
       />
 
       <section className="grid gap-5 xl:grid-cols-[0.55fr_1.45fr]">
-        <AdminCard description="Create a simulated bonus campaign" title="New bonus">
+        <AdminCard
+          description="Create a simulated bonus campaign"
+          title="New bonus"
+        >
           <form action={createBonusCampaignAction} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Campaign name</span>
@@ -133,7 +138,10 @@ export default async function AdminBonusesPage() {
           </form>
         </AdminCard>
 
-        <AdminCard description="Persisted simulated bonus campaigns" title="Campaigns">
+        <AdminCard
+          description="Persisted simulated bonus campaigns"
+          title="Campaigns"
+        >
           {state.kind === "ready" && state.rows.length > 0 ? (
             <DataTable
               columns={bonusColumns}
@@ -168,14 +176,20 @@ function BonusCampaignActions({ campaign }: { campaign: BonusCampaignRow }) {
       {campaign.status === "enabled" ? (
         <form action={pauseBonusCampaignAction}>
           <input name="campaignId" type="hidden" value={campaign.id} />
-          <button className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300" type="submit">
+          <button
+            className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300"
+            type="submit"
+          >
             Pause
           </button>
         </form>
       ) : (
         <form action={enableBonusCampaignAction}>
           <input name="campaignId" type="hidden" value={campaign.id} />
-          <button className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300" type="submit">
+          <button
+            className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
+            type="submit"
+          >
             Enable
           </button>
         </form>
@@ -185,14 +199,13 @@ function BonusCampaignActions({ campaign }: { campaign: BonusCampaignRow }) {
 }
 
 async function getBonusCampaignRows(): Promise<
-  | { kind: "ready"; rows: BonusCampaignRow[] }
-  | { kind: "setup-required" }
+  { kind: "ready"; rows: BonusCampaignRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(bonusCampaigns)
-      .orderBy(desc(bonusCampaigns.updatedAt));
+      .from(bonusCampaignsSchema)
+      .orderBy(desc(bonusCampaignsSchema.updatedAt));
 
     return {
       kind: "ready",
@@ -212,7 +225,10 @@ async function getBonusCampaignRows(): Promise<
   }
 }
 
-function formatReward(rewardType: BonusCampaignRow["rewardType"], rewardValue: number) {
+function formatReward(
+  rewardType: BonusCampaignRow["rewardType"],
+  rewardValue: number,
+) {
   if (rewardType === "fixed") {
     return new Intl.NumberFormat("en", {
       currency: "USD",

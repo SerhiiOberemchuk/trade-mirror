@@ -1,8 +1,9 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireAdminSession } from "@/server/auth/session";
-import { revalidatePath } from "next/cache";
+import { invalidateAfterMutation } from "@/server/cache/revalidation";
 import { headers } from "next/headers";
 
 const ADMIN_USERS_PATH = "/admin/users";
@@ -27,7 +28,7 @@ export async function setUserRoleAction(formData: FormData) {
     headers: await headers(),
   });
 
-  revalidatePath(ADMIN_USERS_PATH);
+  invalidateAdminUsers();
 }
 
 export async function banUserAction(formData: FormData) {
@@ -47,7 +48,7 @@ export async function banUserAction(formData: FormData) {
     headers: await headers(),
   });
 
-  revalidatePath(ADMIN_USERS_PATH);
+  invalidateAdminUsers();
 }
 
 export async function unbanUserAction(formData: FormData) {
@@ -66,5 +67,12 @@ export async function unbanUserAction(formData: FormData) {
     headers: await headers(),
   });
 
-  revalidatePath(ADMIN_USERS_PATH);
+  invalidateAdminUsers();
+}
+
+function invalidateAdminUsers() {
+  invalidateAfterMutation({
+    paths: [ADMIN_USERS_PATH],
+    tags: [CACHE_TAGS.adminUsers],
+  });
 }

@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/db";
-import { supportTickets } from "@/db/schema";
+import { supportTicketsSchema } from "@/db/schema/support.schema";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireAdminSession } from "@/server/auth/session";
+import { invalidateAfterMutation } from "@/server/cache/revalidation";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 
 const SUPPORT_PATH = "/support";
 const ADMIN_SUPPORT_PATH = "/admin/support";
@@ -23,13 +24,13 @@ export async function replySupportTicketAction(formData: FormData) {
   }
 
   await db
-    .update(supportTickets)
+    .update(supportTicketsSchema)
     .set({
       adminReply,
       status: "answered",
       updatedAt: new Date(),
     })
-    .where(eq(supportTickets.id, ticketId));
+    .where(eq(supportTicketsSchema.id, ticketId));
 
   revalidateSupportPaths();
 }
@@ -43,14 +44,14 @@ export async function closeSupportTicketAction(formData: FormData) {
   }
 
   await db
-    .update(supportTickets)
+    .update(supportTicketsSchema)
     .set({
       closedAt: new Date(),
       closedById: session.user.id,
       status: "closed",
       updatedAt: new Date(),
     })
-    .where(eq(supportTickets.id, ticketId));
+    .where(eq(supportTicketsSchema.id, ticketId));
 
   revalidateSupportPaths();
 }
@@ -64,19 +65,21 @@ export async function reopenSupportTicketAction(formData: FormData) {
   }
 
   await db
-    .update(supportTickets)
+    .update(supportTicketsSchema)
     .set({
       closedAt: null,
       closedById: null,
       status: "open",
       updatedAt: new Date(),
     })
-    .where(eq(supportTickets.id, ticketId));
+    .where(eq(supportTicketsSchema.id, ticketId));
 
   revalidateSupportPaths();
 }
 
 function revalidateSupportPaths() {
-  revalidatePath(SUPPORT_PATH);
-  revalidatePath(ADMIN_SUPPORT_PATH);
+  invalidateAfterMutation({
+    paths: [SUPPORT_PATH, ADMIN_SUPPORT_PATH],
+    tags: [CACHE_TAGS.adminSupport],
+  });
 }

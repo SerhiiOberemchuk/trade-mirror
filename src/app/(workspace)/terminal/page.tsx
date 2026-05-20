@@ -1,6 +1,8 @@
 import { db } from "@/db";
-import { simulatedPositions, tradingPairs } from "@/db/schema";
+import { simulatedPositionsSchema } from "@/db/schema/trading.schema";
+import { tradingPairsSchema } from "@/db/schema/trading-pairs.schema";
 import { TradingTerminalPreview } from "@/components/market-panels";
+import { LiveMarketTape } from "@/components/market/live-market-tape";
 import { ActionToolbar } from "@/components/dashboard/primitives";
 import {
   DataTable,
@@ -14,6 +16,7 @@ import { requireSession } from "@/server/auth/session";
 import { getBinanceTickerSnapshot } from "@/server/market-data/binance";
 import { and, asc, desc, eq } from "drizzle-orm";
 import {
+  checkRiskExitsAction,
   closeSimulatedPositionAction,
   createSimulatedOrderAction,
 } from "./actions";
@@ -35,6 +38,7 @@ type OpenPositionRow = {
   current: string;
   pnl: string;
   pnlCents: number;
+  riskExits: string;
 };
 
 const openPositionColumns = [
@@ -44,7 +48,11 @@ const openPositionColumns = [
   },
   {
     header: "Side",
-    cell: (position) => <StatusBadge tone={position.side === "long" ? "success" : "danger"}>{position.side}</StatusBadge>,
+    cell: (position) => (
+      <StatusBadge tone={position.side === "long" ? "success" : "danger"}>
+        {position.side}
+      </StatusBadge>
+    ),
   },
   {
     header: "Size",
@@ -52,22 +60,40 @@ const openPositionColumns = [
   },
   {
     header: "Lev.",
-    cell: (position) => <span className="font-mono text-muted">{position.leverage}</span>,
+    cell: (position) => (
+      <span className="font-mono text-muted">{position.leverage}</span>
+    ),
   },
   {
     header: "Entry",
-    cell: (position) => <span className="font-mono text-muted">{position.entry}</span>,
+    cell: (position) => (
+      <span className="font-mono text-muted">{position.entry}</span>
+    ),
   },
   {
     header: "Live",
-    cell: (position) => <span className="font-mono text-muted">{position.current}</span>,
+    cell: (position) => (
+      <span className="font-mono text-muted">{position.current}</span>
+    ),
   },
   {
     header: "PnL",
     cell: (position) => (
-      <span className={position.pnlCents >= 0 ? "font-mono text-success" : "font-mono text-danger"}>
+      <span
+        className={
+          position.pnlCents >= 0
+            ? "font-mono text-success"
+            : "font-mono text-danger"
+        }
+      >
         {position.pnl}
       </span>
+    ),
+  },
+  {
+    header: "Risk exits",
+    cell: (position) => (
+      <span className="font-mono text-muted">{position.riskExits}</span>
     ),
   },
   {
@@ -89,7 +115,20 @@ export default async function TerminalPage() {
 
       <section className="grid gap-5 xl:grid-cols-[1fr_360px]">
         <TradingTerminalPreview />
-        <DashboardCard description="Creates simulated positions from real current prices" title="Demo order">
+        <DashboardCard
+          action={
+            <form action={checkRiskExitsAction}>
+              <button
+                className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted transition duration-150 hover:border-primary/50 hover:text-foreground"
+                type="submit"
+              >
+                Check risk exits
+              </button>
+            </form>
+          }
+          description="Creates simulated positions from real current prices"
+          title="Demo order"
+        >
           {state.kind === "ready" && state.pairs.length > 0 ? (
             <form action={createSimulatedOrderAction} className="space-y-4">
               <label className="block">
@@ -145,6 +184,32 @@ export default async function TerminalPage() {
                 />
               </label>
 
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-sm font-medium">Stop loss</span>
+                  <input
+                    className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                    min="0"
+                    name="stopLoss"
+                    placeholder="Optional price"
+                    step="0.01"
+                    type="number"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-medium">Take profit</span>
+                  <input
+                    className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                    min="0"
+                    name="takeProfit"
+                    placeholder="Optional price"
+                    step="0.01"
+                    type="number"
+                  />
+                </label>
+              </div>
+
               <button
                 className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300"
                 type="submit"
@@ -171,19 +236,12 @@ export default async function TerminalPage() {
       </section>
 
       <section className="mt-6 grid gap-5 xl:grid-cols-[0.7fr_1.3fr]">
-        <DashboardCard description="Enabled markets with live 24h context when available" title="Pairs">
+        <DashboardCard
+          description="Enabled markets with live 24h context when available"
+          title="Pairs"
+        >
           {state.kind === "ready" && state.pairs.length > 0 ? (
-            <div className="space-y-2">
-              {state.pairs.map((pair) => (
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-3 text-sm" key={pair.symbol}>
-                  <div>
-                    <p className="font-medium">{pair.symbol}</p>
-                    <p className="mt-1 text-xs text-muted">Max {pair.maxLeverage}x / Vol {pair.volume}</p>
-                  </div>
-                  <StatusBadge tone={pair.change.startsWith("-") ? "danger" : "success"}>{pair.change}</StatusBadge>
-                </div>
-              ))}
-            </div>
+            <LiveMarketTape rows={state.pairs} />
           ) : null}
 
           {state.kind === "ready" && state.pairs.length === 0 ? (
@@ -195,7 +253,10 @@ export default async function TerminalPage() {
           ) : null}
         </DashboardCard>
 
-        <DashboardCard description="Positions created by manual simulated orders" title="Open positions">
+        <DashboardCard
+          description="Positions created by manual simulated orders"
+          title="Open positions"
+        >
           {state.kind === "ready" && state.positions.length > 0 ? (
             <DataTable
               columns={openPositionColumns}
@@ -226,7 +287,10 @@ function OpenPositionActions({ position }: { position: OpenPositionRow }) {
     <ActionToolbar>
       <form action={closeSimulatedPositionAction}>
         <input name="positionId" type="hidden" value={position.id} />
-        <button className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400" type="submit">
+        <button
+          className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400"
+          type="submit"
+        >
           Close
         </button>
       </form>
@@ -234,7 +298,9 @@ function OpenPositionActions({ position }: { position: OpenPositionRow }) {
   );
 }
 
-async function getTerminalState(userId: string): Promise<
+async function getTerminalState(
+  userId: string,
+): Promise<
   | { kind: "ready"; pairs: PairRow[]; positions: OpenPositionRow[] }
   | { kind: "setup-required" }
 > {
@@ -242,20 +308,27 @@ async function getTerminalState(userId: string): Promise<
     const [pairRows, positionRows] = await Promise.all([
       db
         .select()
-        .from(tradingPairs)
-        .where(eq(tradingPairs.status, "enabled"))
-        .orderBy(asc(tradingPairs.symbol)),
+        .from(tradingPairsSchema)
+        .where(eq(tradingPairsSchema.status, "enabled"))
+        .orderBy(asc(tradingPairsSchema.symbol)),
       db
         .select()
-        .from(simulatedPositions)
-        .where(and(eq(simulatedPositions.userId, userId), eq(simulatedPositions.status, "open")))
-        .orderBy(desc(simulatedPositions.openedAt)),
+        .from(simulatedPositionsSchema)
+        .where(
+          and(
+            eq(simulatedPositionsSchema.userId, userId),
+            eq(simulatedPositionsSchema.status, "open"),
+          ),
+        )
+        .orderBy(desc(simulatedPositionsSchema.openedAt)),
     ]);
 
-    const symbols = Array.from(new Set([
-      ...pairRows.map((pair) => pair.symbol),
-      ...positionRows.map((position) => position.pairSymbol),
-    ]));
+    const symbols = Array.from(
+      new Set([
+        ...pairRows.map((pair) => pair.symbol),
+        ...positionRows.map((position) => position.pairSymbol),
+      ]),
+    );
     const tickerMap = await getTickerMap(symbols);
 
     return {
@@ -272,7 +345,8 @@ async function getTerminalState(userId: string): Promise<
       }),
       positions: positionRows.map((position) => {
         const ticker = tickerMap.get(position.pairSymbol);
-        const currentPriceCents = ticker?.priceCents ?? position.entryPriceCents;
+        const currentPriceCents =
+          ticker?.priceCents ?? position.entryPriceCents;
         const pnlCents = calculatePnlCents({
           currentPriceCents,
           entryPriceCents: position.entryPriceCents,
@@ -288,6 +362,10 @@ async function getTerminalState(userId: string): Promise<
           pair: position.pairSymbol,
           pnl: formatSignedMoney(pnlCents, "USD"),
           pnlCents,
+          riskExits: formatRiskExits(
+            position.stopLossPriceCents,
+            position.takeProfitPriceCents,
+          ),
           side: position.side,
           size: formatMoney(position.notionalCents, "USD"),
         };
@@ -309,7 +387,12 @@ async function getTickerMap(symbols: string[]) {
     }),
   );
 
-  return new Map(entries.filter((entry): entry is readonly [string, NonNullable<(typeof entry)[1]>] => entry[1] !== null));
+  return new Map(
+    entries.filter(
+      (entry): entry is readonly [string, NonNullable<(typeof entry)[1]>] =>
+        entry[1] !== null,
+    ),
+  );
 }
 
 function calculatePnlCents({
@@ -353,4 +436,18 @@ function formatCompactMoney(value: number) {
     notation: "compact",
     style: "currency",
   }).format(value);
+}
+
+function formatRiskExits(
+  stopLossPriceCents: number | null,
+  takeProfitPriceCents: number | null,
+) {
+  const stopLoss = stopLossPriceCents
+    ? formatMoney(stopLossPriceCents, "USD")
+    : "SL n/a";
+  const takeProfit = takeProfitPriceCents
+    ? formatMoney(takeProfitPriceCents, "USD")
+    : "TP n/a";
+
+  return `${stopLoss} / ${takeProfit}`;
 }

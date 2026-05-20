@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/db";
-import { copySettings } from "@/db/schema";
+import { copySettingsSchema } from "@/db/schema/copy-trading.schema";
+import { CACHE_TAGS, cacheTags } from "@/lib/cache-tags";
 import { requireSession } from "@/server/auth/session";
+import { invalidateAfterMutation } from "@/server/cache/revalidation";
 import { and, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 
 const COPY_TRADING_PATH = "/copy-trading";
 const ADMIN_COPY_TRADING_PATH = "/admin/copy-trading";
@@ -29,18 +30,23 @@ async function updateCopySettingStatus(
   }
 
   await db
-    .update(copySettings)
+    .update(copySettingsSchema)
     .set({
       status,
       updatedAt: new Date(),
     })
     .where(
       and(
-        eq(copySettings.id, settingId),
-        eq(copySettings.followerUserId, session.user.id),
+        eq(copySettingsSchema.id, settingId),
+        eq(copySettingsSchema.followerUserId, session.user.id),
       ),
     );
 
-  revalidatePath(COPY_TRADING_PATH);
-  revalidatePath(ADMIN_COPY_TRADING_PATH);
+  invalidateAfterMutation({
+    paths: [COPY_TRADING_PATH, ADMIN_COPY_TRADING_PATH],
+    tags: [
+      cacheTags.userCopyTrading(session.user.id),
+      CACHE_TAGS.adminCopyTrading,
+    ],
+  });
 }

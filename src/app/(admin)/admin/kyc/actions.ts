@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/db";
-import { kycRequests } from "@/db/schema";
+import { kycRequestsSchema } from "@/db/schema/kyc.schema";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireAdminSession } from "@/server/auth/session";
+import { invalidateAfterMutation } from "@/server/cache/revalidation";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 
 const VERIFICATION_PATH = "/verification";
 const ADMIN_KYC_PATH = "/admin/kyc";
@@ -34,15 +35,19 @@ async function reviewKycRequest(
   }
 
   await db
-    .update(kycRequests)
+    .update(kycRequestsSchema)
     .set({
       reviewedAt: new Date(),
       reviewedById: session.user.id,
-      reviewNote: reviewNote || (status === "approved" ? "Approved by admin." : "Rejected by admin."),
+      reviewNote:
+        reviewNote ||
+        (status === "approved" ? "Approved by admin." : "Rejected by admin."),
       status,
     })
-    .where(eq(kycRequests.id, requestId));
+    .where(eq(kycRequestsSchema.id, requestId));
 
-  revalidatePath(VERIFICATION_PATH);
-  revalidatePath(ADMIN_KYC_PATH);
+  invalidateAfterMutation({
+    paths: [VERIFICATION_PATH, ADMIN_KYC_PATH],
+    tags: [CACHE_TAGS.adminKyc],
+  });
 }

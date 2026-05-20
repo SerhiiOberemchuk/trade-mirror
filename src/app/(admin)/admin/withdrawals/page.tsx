@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { withdrawalRequests } from "@/db/schema";
+import { withdrawalRequestsSchema } from "@/db/schema/wallet.schema";
 import {
   ActionToolbar,
   AdminCard,
@@ -10,10 +10,7 @@ import {
   type DataTableColumn,
 } from "@/components/admin-shell";
 import { desc } from "drizzle-orm";
-import {
-  approveWithdrawalAction,
-  rejectWithdrawalAction,
-} from "./actions";
+import { approveWithdrawalAction, rejectWithdrawalAction } from "./actions";
 
 type WithdrawalRow = {
   id: string;
@@ -35,15 +32,23 @@ const withdrawalColumns = [
   },
   {
     header: "Risk",
-    cell: (request) => <StatusBadge tone={getRiskTone(request.risk)}>{request.risk}</StatusBadge>,
+    cell: (request) => (
+      <StatusBadge tone={getRiskTone(request.risk)}>{request.risk}</StatusBadge>
+    ),
   },
   {
     header: "Status",
-    cell: (request) => <StatusBadge tone={getStatusTone(request.status)}>{request.status}</StatusBadge>,
+    cell: (request) => (
+      <StatusBadge tone={getStatusTone(request.status)}>
+        {request.status}
+      </StatusBadge>
+    ),
   },
   {
     header: "Requested",
-    cell: (request) => <span className="font-mono text-muted">{request.date}</span>,
+    cell: (request) => (
+      <span className="font-mono text-muted">{request.date}</span>
+    ),
   },
   {
     header: "Actions",
@@ -60,7 +65,10 @@ export default async function AdminWithdrawalsPage() {
         description="Simulated withdrawal request review with persisted approve and reject decisions."
         title="Withdrawals"
       />
-      <AdminCard description="Pending simulated withdrawals" title="Withdrawal approvals">
+      <AdminCard
+        description="Pending simulated withdrawals"
+        title="Withdrawal approvals"
+      >
         {state.kind === "ready" && state.rows.length > 0 ? (
           <DataTable
             columns={withdrawalColumns}
@@ -97,13 +105,19 @@ function WithdrawalActions({ request }: { request: WithdrawalRow }) {
     <ActionToolbar>
       <form action={approveWithdrawalAction}>
         <input name="withdrawalId" type="hidden" value={request.id} />
-        <button className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300" type="submit">
+        <button
+          className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
+          type="submit"
+        >
           Approve
         </button>
       </form>
       <form action={rejectWithdrawalAction}>
         <input name="withdrawalId" type="hidden" value={request.id} />
-        <button className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400" type="submit">
+        <button
+          className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400"
+          type="submit"
+        >
           Reject
         </button>
       </form>
@@ -112,14 +126,13 @@ function WithdrawalActions({ request }: { request: WithdrawalRow }) {
 }
 
 async function getWithdrawalRows(): Promise<
-  | { kind: "ready"; rows: WithdrawalRow[] }
-  | { kind: "setup-required" }
+  { kind: "ready"; rows: WithdrawalRow[] } | { kind: "setup-required" }
 > {
   try {
     const rows = await db
       .select()
-      .from(withdrawalRequests)
-      .orderBy(desc(withdrawalRequests.requestedAt));
+      .from(withdrawalRequestsSchema)
+      .orderBy(desc(withdrawalRequestsSchema.requestedAt));
 
     return {
       kind: "ready",

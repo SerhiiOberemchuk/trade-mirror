@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/db";
-import { tradingPairs } from "@/db/schema";
+import { tradingPairsSchema } from "@/db/schema/trading-pairs.schema";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireAdminSession } from "@/server/auth/session";
+import { invalidateAfterMutation } from "@/server/cache/revalidation";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 
 const ADMIN_TRADING_PAIRS_PATH = "/admin/trading-pairs";
 const SYMBOL_PATTERN = /^[A-Z0-9]{2,12}\/[A-Z0-9]{2,12}$/;
@@ -35,7 +36,7 @@ export async function createTradingPairAction(formData: FormData) {
 
   const [baseAsset, quoteAsset] = symbol.split("/");
 
-  await db.insert(tradingPairs).values({
+  await db.insert(tradingPairsSchema).values({
     baseAsset,
     maxLeverage,
     quoteAsset,
@@ -44,7 +45,7 @@ export async function createTradingPairAction(formData: FormData) {
     symbol,
   });
 
-  revalidatePath(ADMIN_TRADING_PAIRS_PATH);
+  revalidateTradingPairs();
 }
 
 export async function enableTradingPairAction(formData: FormData) {
@@ -67,16 +68,23 @@ async function updateTradingPairStatus(
   }
 
   await db
-    .update(tradingPairs)
+    .update(tradingPairsSchema)
     .set({
       status,
       updatedAt: new Date(),
     })
-    .where(eq(tradingPairs.id, pairId));
+    .where(eq(tradingPairsSchema.id, pairId));
 
-  revalidatePath(ADMIN_TRADING_PAIRS_PATH);
+  revalidateTradingPairs();
 }
 
 function normalizeSymbol(symbol: string) {
   return symbol.trim().toUpperCase().replace("-", "/");
+}
+
+function revalidateTradingPairs() {
+  invalidateAfterMutation({
+    paths: [ADMIN_TRADING_PAIRS_PATH],
+    tags: [CACHE_TAGS.adminTradingPairs],
+  });
 }

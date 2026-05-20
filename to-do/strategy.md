@@ -6,6 +6,9 @@ TradeMirror should grow in controlled phases. The current priority is to make th
 
 Core product boundary: all financial activity is simulated, while market data should be as real as practical. Real crypto pairs, live prices, candles, 24h change, and 24h volume can drive simulated orders, PnL, and copy trading, but user trades, balances, deposits, withdrawals, bonuses, and copy execution remain simulated.
 
+Implementation rule: avoid giant files. Keep one file focused on one responsibility where possible; when route actions, pages, services, or helpers grow, split them into logical folders with smaller files.
+Terminal trading actions were split into focused `src/server/trading/*` modules so route actions stay thin and domain lifecycle logic is easier to maintain.
+
 ## Phase 1: Auth And Protected Shell
 
 Status: mostly complete.
@@ -118,10 +121,11 @@ Work items:
 - Market price source abstraction.
 - Buy/sell simulation. Started with manual market order creation.
 - Position lifecycle. Started with open and close actions.
-- Stop loss and take profit logic.
+- Stop loss and take profit logic. Started with optional thresholds and live-price risk exit checks.
 - Trade history. Started with persisted user history and admin monitor.
 - Copy trading allocation settings. Started with persisted copy settings and pause/resume controls.
 - Trader performance summaries. Started with persisted provider profile metrics.
+- Copy automation execution. Started with active copy settings opening and closing linked copied positions from provider manual positions.
 
 Non-goals:
 
@@ -164,10 +168,14 @@ Completed scope:
 - User marketplace profile publishing and copy allocation creation.
 - User copy allocation pause and resume controls.
 - Admin copy trading monitor from persisted copy settings.
+- Active copy settings create linked copied positions when a provider opens a manual simulated position.
+- Linked copied positions close automatically when the provider closes the source position.
+- Simulated positions support optional stop loss and take profit thresholds.
+- User terminal can check live Binance prices and close positions whose risk exits are hit.
 
 Work items:
 
-- Continue copy automation execution based on active copy settings.
+- Real-time market-data fan-out. Started with normalized SSE stream and terminal live market tape.
 
 ## Phase 7: Real-Time Layer
 
@@ -182,9 +190,10 @@ Candidate approaches:
 - TradingView Lightweight Charts for rendering chart data; it is not a market-data provider.
 - Static/mock provider remains useful as a local fallback and test fixture.
 - Server-Sent Events can fan out normalized live market updates to dashboards if browser/client WebSocket ownership becomes too broad.
+- Normalized SSE fan-out is implemented at `/api/market/stream` for terminal market tape.
 - WebSocket is appropriate for upstream market feeds and any later bidirectional realtime feature.
 - Optional Redis later if the deployment model needs it.
 
 ## Current Recommendation
 
-Generate and apply the pending Drizzle migration for trader profiles and copy settings, then smoke-test `/trader-marketplace`, `/copy-trading`, and `/admin/copy-trading`. After that, continue only with existing plan items: copy automation execution, stop loss/take profit logic, and real-time market-data fan-out.
+Smoke-test `/terminal` market stream, provider open/close flows, and terminal risk exit checks. After that, continue with hardening already planned workflows: cache tags, smoke tests, and replacing remaining static market UI with normalized market data.
