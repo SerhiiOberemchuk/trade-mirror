@@ -5,6 +5,9 @@ import {
   TradingTerminalPreview,
 } from "@/components/market-panels";
 import { InfoCard, PageHero, PublicShell } from "@/components/public-shell";
+import { getPublicMarketsState } from "@/server/public/markets";
+import { getPublicTraderRows } from "@/server/public/traders";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
@@ -26,10 +29,9 @@ export default function Home() {
         ))}
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-5 px-5 py-4 lg:grid-cols-[1fr_0.9fr] lg:px-8">
-        <TopTradersPanel />
-        <MarketWatchPanel />
-      </section>
+      <Suspense fallback={<PublicPanelsSkeleton />}>
+        <PublicPanels />
+      </Suspense>
 
       <section className="mx-auto grid max-w-7xl gap-5 px-5 py-8 lg:grid-cols-3 lg:px-8">
         {featureCards.map(([title, description]) => (
@@ -37,5 +39,28 @@ export default function Home() {
         ))}
       </section>
     </PublicShell>
+  );
+}
+
+async function PublicPanels() {
+  const [markets, traderRows] = await Promise.all([
+    getPublicMarketsState(),
+    getPublicTraderRows(),
+  ]);
+
+  return (
+    <section className="mx-auto grid max-w-7xl gap-5 px-5 py-4 lg:grid-cols-[1fr_0.9fr] lg:px-8">
+      <TopTradersPanel rows={traderRows.slice(0, 4)} />
+      <MarketWatchPanel rows={markets.rows.slice(0, 4)} />
+    </section>
+  );
+}
+
+function PublicPanelsSkeleton() {
+  return (
+    <section className="mx-auto grid max-w-7xl gap-5 px-5 py-4 lg:grid-cols-[1fr_0.9fr] lg:px-8">
+      <div className="h-72 rounded-lg border border-border bg-card" />
+      <div className="h-72 rounded-lg border border-border bg-card" />
+    </section>
   );
 }

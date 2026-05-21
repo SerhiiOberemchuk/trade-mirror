@@ -5,7 +5,7 @@ export default function FaqPage() {
   return (
     <PublicShell>
       <PageHero
-        description="FAQ content clarifies the product concept, demo boundaries, and planned implementation stages."
+        description="FAQ content clarifies the product concept, demo boundaries, and implemented simulation workflows."
         eyebrow="Questions"
         title="TradeMirror FAQ"
       >

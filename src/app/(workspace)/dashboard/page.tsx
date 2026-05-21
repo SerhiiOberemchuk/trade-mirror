@@ -1,11 +1,3 @@
-import { db } from "@/db";
-import { copySettingsSchema } from "@/db/schema/copy-trading.schema";
-import { supportTicketsSchema } from "@/db/schema/support.schema";
-import { simulatedPositionsSchema } from "@/db/schema/trading.schema";
-import {
-  depositRequestsSchema,
-  withdrawalRequestsSchema,
-} from "@/db/schema/wallet.schema";
 import {
   DashboardCard,
   DashboardPageHeader,
@@ -14,19 +6,18 @@ import {
   StatTile,
 } from "@/components/dashboard-shell";
 import { requireSession } from "@/server/auth/session";
-import { getBinanceTickerSnapshots } from "@/server/market-data/binance";
-import { calculatePnlCents } from "@/server/trading/pnl";
-import { desc, eq } from "drizzle-orm";
+import {
+  type DashboardCopySetting,
+  type DashboardPosition,
+  type DashboardSupportTicket,
+  getDashboardOverviewState,
+} from "@/server/dashboard/overview";
 import type { Route } from "next";
 import Link from "next/link";
 
-type SimulatedPosition = typeof simulatedPositionsSchema.$inferSelect;
-type CopySetting = typeof copySettingsSchema.$inferSelect;
-type SupportTicket = typeof supportTicketsSchema.$inferSelect;
-
 export default async function DashboardPage() {
   const session = await requireSession();
-  const state = await getDashboardState(session.user.id);
+  const state = await getDashboardOverviewState(session.user.id);
 
   return (
     <>
@@ -142,113 +133,10 @@ export default async function DashboardPage() {
   );
 }
 
-async function getDashboardState(userId: string) {
-  const [
-    deposits,
-    withdrawals,
-    openPositions,
-    copySettings,
-    supportTickets,
-  ] = await Promise.all([
-    db
-      .select()
-      .from(depositRequestsSchema)
-      .where(eq(depositRequestsSchema.userId, userId))
-      .orderBy(desc(depositRequestsSchema.requestedAt)),
-    db
-      .select()
-      .from(withdrawalRequestsSchema)
-      .where(eq(withdrawalRequestsSchema.userId, userId))
-      .orderBy(desc(withdrawalRequestsSchema.requestedAt)),
-    db
-      .select()
-      .from(simulatedPositionsSchema)
-      .where(eq(simulatedPositionsSchema.userId, userId))
-      .orderBy(desc(simulatedPositionsSchema.openedAt)),
-    db
-      .select()
-      .from(copySettingsSchema)
-      .where(eq(copySettingsSchema.followerUserId, userId))
-      .orderBy(desc(copySettingsSchema.updatedAt)),
-    db
-      .select()
-      .from(supportTicketsSchema)
-      .where(eq(supportTicketsSchema.userId, userId))
-      .orderBy(desc(supportTicketsSchema.updatedAt))
-      .limit(3),
-  ]);
-
-  const openActivePositions = openPositions.filter((position) => position.status === "open");
-  const tickerSnapshots = await getBinanceTickerSnapshots(
-    Array.from(new Set(openActivePositions.map((position) => position.pairSymbol))),
-  );
-  const priceBySymbol = new Map(
-    tickerSnapshots.map((snapshot) => [snapshot.symbol, snapshot.priceCents]),
-  );
-  const positionsWithPnl = openActivePositions.slice(0, 5).map((position) => {
-    const currentPriceCents = priceBySymbol.get(position.pairSymbol);
-    const unrealizedPnlCents = currentPriceCents
-      ? calculatePnlCents({
-        currentPriceCents,
-        entryPriceCents: position.entryPriceCents,
-        notionalCents: position.notionalCents,
-        side: position.side,
-      })
-      : 0;
-
-    return {
-      ...position,
-      currentPriceCents,
-      unrealizedPnlCents,
-    };
-  });
-
-  const approvedDeposits = deposits.filter((deposit) => deposit.status === "approved");
-  const approvedWithdrawals = withdrawals.filter((withdrawal) => withdrawal.status === "approved");
-  const approvedDepositsCents = sumCents(approvedDeposits, (deposit) => deposit.amountCents);
-  const approvedWithdrawalsCents = sumCents(approvedWithdrawals, (withdrawal) => withdrawal.amountCents);
-  const realizedPnlCents = sumCents(
-    openPositions.filter((position) => position.status === "closed"),
-    (position) => position.realizedPnlCents ?? 0,
-  );
-
-  return {
-    approvedBonusCents: sumCents(
-      approvedDeposits.filter((deposit) => deposit.method.startsWith("Bonus code")),
-      (deposit) => deposit.amountCents,
-    ),
-    approvedDepositsCount: approvedDeposits.length,
-    copyAllocationCents: sumCents(
-      copySettings.filter((setting) => setting.status === "active"),
-      (setting) => setting.allocationCents,
-    ),
-    copySettings: copySettings.slice(0, 5),
-    demoBalanceCents: approvedDepositsCents - approvedWithdrawalsCents + realizedPnlCents,
-    openExposureCents: sumCents(openActivePositions, (position) => position.notionalCents),
-    openPositions: positionsWithPnl,
-    pendingDepositsCents: sumCents(
-      deposits.filter((deposit) => deposit.status === "pending"),
-      (deposit) => deposit.amountCents,
-    ),
-    pendingWithdrawalsCents: sumCents(
-      withdrawals.filter((withdrawal) => withdrawal.status === "pending"),
-      (withdrawal) => withdrawal.amountCents,
-    ),
-    supportTickets,
-    unrealizedPnlCents: sumCents(
-      positionsWithPnl,
-      (position) => position.unrealizedPnlCents,
-    ),
-  };
-}
-
 function PositionRow({
   position,
 }: {
-  position: SimulatedPosition & {
-    currentPriceCents?: number;
-    unrealizedPnlCents: number;
-  };
+  position: DashboardPosition;
 }) {
   const hasLivePrice = typeof position.currentPriceCents === "number";
 
@@ -277,7 +165,7 @@ function PositionRow({
   );
 }
 
-function CopySettingRow({ setting }: { setting: CopySetting }) {
+function CopySettingRow({ setting }: { setting: DashboardCopySetting }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-background px-4 py-3">
       <div>
@@ -313,10 +201,6 @@ function WorkspaceLink({ href, children }: { href: Route; children: React.ReactN
   );
 }
 
-function sumCents<Row>(rows: readonly Row[], selector: (row: Row) => number) {
-  return rows.reduce((sum, row) => sum + selector(row), 0);
-}
-
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", {
     currency: "USD",
@@ -340,7 +224,7 @@ function formatStatus(value: string) {
     .join(" ");
 }
 
-function formatPriority(priority: SupportTicket["priority"]) {
+function formatPriority(priority: DashboardSupportTicket["priority"]) {
   return formatStatus(priority);
 }
 
@@ -351,7 +235,7 @@ function formatRelativeDate(date: Date) {
   }).format(date);
 }
 
-function getSupportStatusTone(status: SupportTicket["status"]) {
+function getSupportStatusTone(status: DashboardSupportTicket["status"]) {
   if (status === "open") {
     return "warning";
   }

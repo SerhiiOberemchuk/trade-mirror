@@ -2,16 +2,16 @@ import { InfoCard, PageHero, PublicShell } from "@/components/public-shell";
 
 const securityItems = [
   ["Simulation boundary", "Deposits, withdrawals, balances, and trades are labeled as simulated product behavior."],
-  ["Role-based access", "Guest, user, trader, and admin surfaces are separated in planned route and permission structure."],
-  ["Verification flow", "Mock KYC states can preview document upload, review, approval, and rejection workflows."],
-  ["Operational audit", "Admin views will expose user activity, support tickets, copy activity, and balance changes."],
+  ["Role-based access", "Guest, user, trader, and admin surfaces are separated by protected route and permission structure."],
+  ["Verification flow", "KYC requests support document submission, review, approval, and rejection workflows."],
+  ["Operational audit", "Admin views expose user activity, support tickets, copy activity, and simulated balance changes."],
 ] as const;
 
 export default function SecurityPage() {
   return (
     <PublicShell>
       <PageHero
-        description="Security pages should communicate clear product boundaries and planned control surfaces without pretending the simulation handles real funds."
+        description="Security pages communicate clear product boundaries and control surfaces without pretending the simulation handles real funds."
         eyebrow="Trust and controls"
         title="Security model for a simulated trading platform"
       >

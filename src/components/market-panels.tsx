@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { chartBars, marketRows, traderRows } from "@/data/marketing";
+import { chartBars } from "@/data/marketing";
 import { SectionHeader } from "@/components/public-shell";
+import type { PublicMarketRow } from "@/server/public/markets";
+import type { PublicTraderRow } from "@/server/public/traders";
 
 export function TradingTerminalPreview() {
   return (
@@ -89,7 +91,7 @@ function MarketMeta({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function TopTradersPanel() {
+export function TopTradersPanel({ rows }: { rows: PublicTraderRow[] }) {
   return (
     <div className="rounded-lg border border-border bg-card">
       <SectionHeader
@@ -115,8 +117,8 @@ export function TopTradersPanel() {
             </tr>
           </thead>
           <tbody>
-            {traderRows.map((trader) => (
-              <tr className="border-b border-border/70 last:border-0" key={trader.name}>
+            {rows.map((trader) => (
+              <tr className="border-b border-border/70 last:border-0" key={trader.id}>
                 <td className="px-5 py-4 font-medium">{trader.name}</td>
                 <td className="px-5 py-4 text-muted">{trader.strategy}</td>
                 <td className="px-5 py-4 font-mono text-success">{trader.pnl}</td>
@@ -129,6 +131,13 @@ export function TopTradersPanel() {
                 <td className="px-5 py-4 font-mono">{trader.followers}</td>
               </tr>
             ))}
+            {rows.length === 0 ? (
+              <tr>
+                <td className="px-5 py-6 text-sm text-muted" colSpan={6}>
+                  No published trader profiles yet.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
@@ -136,15 +145,15 @@ export function TopTradersPanel() {
   );
 }
 
-export function MarketWatchPanel() {
+export function MarketWatchPanel({ rows }: { rows: PublicMarketRow[] }) {
   return (
     <div className="rounded-lg border border-border bg-card">
       <SectionHeader
-        description="Demo prices for core trading pairs"
+        description="Enabled pairs with live market context"
         title="Market watch"
       />
       <div className="divide-y divide-border">
-        {marketRows.slice(0, 4).map((market) => (
+        {rows.slice(0, 4).map((market) => (
           <div
             className="grid grid-cols-4 items-center gap-3 px-5 py-4 text-sm"
             key={market.pair}
@@ -161,6 +170,11 @@ export function MarketWatchPanel() {
             <div className="text-right font-mono text-muted">{market.volume}</div>
           </div>
         ))}
+        {rows.length === 0 ? (
+          <div className="px-5 py-6 text-sm text-muted">
+            No enabled trading pairs yet.
+          </div>
+        ) : null}
       </div>
     </div>
   );

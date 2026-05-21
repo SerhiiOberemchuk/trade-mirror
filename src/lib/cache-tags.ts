@@ -3,6 +3,7 @@ export const CACHE_TAGS = {
   adminCopyTrading: "admin:copy-trading",
   adminDeposits: "admin:deposits",
   adminKyc: "admin:kyc",
+  adminReferrals: "admin:referrals",
   adminSupport: "admin:support",
   adminTradingPairs: "admin:trading-pairs",
   adminTrades: "admin:trades",
@@ -18,6 +19,7 @@ export const cacheTags = {
   userSupport: (userId: string) => `user:${userId}:support`,
   userSettings: (userId: string) => `user:${userId}:settings`,
   userTerminal: (userId: string) => `user:${userId}:terminal`,
+  userTraderProfile: (userId: string) => `user:${userId}:trader-profile`,
   userVerification: (userId: string) => `user:${userId}:verification`,
   userWallet: (userId: string) => `user:${userId}:wallet`,
 } as const;

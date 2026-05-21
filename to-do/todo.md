@@ -2,17 +2,17 @@
 
 ## Implementation Status
 
-Last updated: 2026-05-20
+Last updated: 2026-05-21
 
 ### Done
 
 - [x] Created `CODE_STYLE.md` with project rules for Next.js 16, `cacheComponents`, Server Functions, cache tags, `updateTag`, DRY constants, TypeScript, and styling.
-- [x] Created public design pages: `/`, `/markets`, `/top-traders`, `/how-it-works`, `/pricing`, `/security`, `/faq`, `/login`, `/register`.
+- [x] Created public design pages: `/`, `/markets`, `/top-traders`, `/how-it-works`, `/guide`, `/pricing`, `/security`, `/faq`, `/login`, `/register`.
 - [x] Created shared public UI structure: `src/lib/navigation.ts`, `src/data/marketing.ts`, `src/components/public-shell.tsx`, `src/components/market-panels.tsx`.
 - [x] Created user dashboard UI skeleton: `/dashboard`, `/terminal`, `/copy-trading`, `/trader-marketplace`, `/wallet`, `/history`, `/verification`, `/support`, `/settings`.
-- [x] Created shared dashboard UI structure: `src/app/(workspace)/layout.tsx`, `src/components/dashboard-shell.tsx`, `src/data/dashboard.ts`.
+- [x] Created shared dashboard UI structure: `src/app/(workspace)/layout.tsx`, `src/components/dashboard-shell.tsx`.
 - [x] Created admin dashboard UI skeleton: `/admin`, `/admin/users`, `/admin/trading-pairs`, `/admin/deposits`, `/admin/withdrawals`, `/admin/bonuses`, `/admin/trades`, `/admin/copy-trading`, `/admin/referrals`, `/admin/support`, `/admin/settings`.
-- [x] Created shared admin UI structure: `src/app/(admin)/admin/layout.tsx`, `src/components/admin-shell.tsx`, `src/data/admin.ts`.
+- [x] Created shared admin UI structure: `src/app/(admin)/admin/layout.tsx`, `src/components/admin-shell.tsx`.
 - [x] Configured Drizzle ORM, Better Auth, auth API route, and generated auth schema/migrations.
 - [x] Added auth forms for registration and login with email verification.
 - [x] Added visible success feedback after registration when the verification email is sent.
@@ -36,12 +36,21 @@ Last updated: 2026-05-20
 - [x] Added stop loss and take profit thresholds with live-price risk exit checks for simulated positions.
 - [x] Connected the user dashboard overview to real wallet, trade, copy trading, support, and live-price PnL data.
 - [x] Connected user trade history account activity to real deposit and withdrawal records.
+- [x] Connected user wallet balances and transactions to real deposit, withdrawal, position, and PnL records.
+- [x] Connected public markets and top-traders surfaces to real enabled pairs, live market data, and published trader profiles.
+- [x] Added public `/guide` page explaining the platform purpose, real-data/simulation boundary, user workflow, workspace areas, and admin role.
 - [x] Added user profile settings update action and real admin overview/settings runtime panels.
 - [x] Added user bonus code application flow backed by persisted bonus campaigns and simulated approved deposits.
+- [x] Added persisted referral profile schema and admin create/activate/pause controls.
+- [x] Added user trader profile route with own provider profile overview and publish/pause controls.
 - [x] Added project rule to avoid giant files and keep one file focused on one responsibility.
 - [x] Split Drizzle app schemas into focused `*.schema.ts` domain files and removed the schema barrel `index.ts`.
 - [x] Renamed Drizzle table exports to explicit `*Schema` names and updated app imports to use concrete schema modules.
 - [x] Split terminal trading actions into focused server modules for validation, lifecycle, copy automation, risk exits, and revalidation.
+- [x] Split terminal page data loading and live PnL formatting into a focused server module.
+- [x] Split wallet page into focused forms, request queue UI, and server data modules.
+- [x] Removed obsolete static dashboard/admin mock data files after workspace and admin pages moved to real records.
+- [x] Removed obsolete static public market/trader mock data after public pages moved to real records.
 - [x] Added normalized SSE market-data fan-out and live terminal market tape from real Binance prices.
 - [x] Added Binance candle adapter and real OHLCV candlestick panel on the trading terminal.
 - [x] Added centralized cache tags and `updateTag()` mutation invalidation helpers for existing Server Actions.
@@ -49,6 +58,7 @@ Last updated: 2026-05-20
 - [x] Generated and applied Drizzle migrations for bonus campaign and simulated trading workflows.
 - [x] Generated and applied Drizzle migrations for trader profile and copy setting workflows.
 - [x] Generated and applied Drizzle migrations for copied position link fields and stop loss / take profit fields on `simulated_position`.
+- [x] Generated and applied Drizzle migration for referral profile workflows.
 - [x] Added navigation polish pass:
   - [x] active public navigation states
   - [x] active user dashboard sidebar/mobile navigation states
@@ -82,8 +92,8 @@ Active phase: make the already planned domain workflows functional.
 - [x] Add base auth, email verification, Better Auth admin role plugin, password policy, and compromised password protection.
 - [x] Add protected routes and role-based page access.
 - [x] Add first real admin mutation surface: Better Auth user role and ban controls.
-- [ ] Add remaining domain models and database schema.
-- [ ] Add remaining Server Functions / Server Actions for mutations.
+- [x] Add remaining domain models and database schema.
+- [x] Add remaining Server Functions / Server Actions for mutations.
 - [x] Add centralized cache tags and `updateTag()` invalidation for mutations.
 - [x] Add real or simulated market data layer.
 
@@ -134,8 +144,7 @@ Real-time:
 
 Infrastructure:
 
-- Docker
-- Vercel or VPS deployment
+- Vercel deployment
 - Redis optional
 
 ## User Roles
@@ -178,11 +187,12 @@ Admin can manage:
 2. Markets
 3. Top Traders
 4. How Copy Trading Works
-5. Pricing
-6. Security
-7. FAQ
-8. Login
-9. Register
+5. User Guide
+6. Pricing
+7. Security
+8. FAQ
+9. Login
+10. Register
 
 ## User Dashboard Pages
 
