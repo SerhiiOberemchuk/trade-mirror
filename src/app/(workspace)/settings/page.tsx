@@ -4,7 +4,7 @@ import {
   StatusBadge,
 } from "@/components/dashboard-shell";
 import { requireSession } from "@/server/auth/session";
-import { updateProfileAction } from "./actions";
+import { ProfileForm } from "./profile-form";
 
 export default async function SettingsPage() {
   const session = await requireSession();
@@ -21,37 +21,7 @@ export default async function SettingsPage() {
           description="This name appears in wallet requests, tickets, KYC submissions, trader profiles, and admin review queues."
           title="Profile"
         >
-          <form action={updateProfileAction} className="space-y-4">
-            <label className="block">
-              <span className="text-sm font-medium">Display name</span>
-              <input
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                defaultValue={session.user.name}
-                maxLength={80}
-                minLength={2}
-                name="name"
-                required
-                type="text"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium">Email</span>
-              <input
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm text-muted outline-none"
-                defaultValue={session.user.email}
-                disabled
-                type="email"
-              />
-            </label>
-
-            <button
-              className="rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300"
-              type="submit"
-            >
-              Save profile
-            </button>
-          </form>
+          <ProfileForm email={session.user.email} name={session.user.name} />
         </DashboardCard>
 
         <DashboardCard

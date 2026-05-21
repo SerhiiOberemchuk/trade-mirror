@@ -129,7 +129,7 @@ function UserActions({ user }: { user: AdminUser }) {
 
   return (
     <ActionToolbar>
-      <form action={setUserRoleAction}>
+      <form action={setUserRoleFormAction}>
         <input name="userId" type="hidden" value={user.id} />
         <input name="role" type="hidden" value={nextRole} />
         <button
@@ -142,7 +142,7 @@ function UserActions({ user }: { user: AdminUser }) {
       </form>
 
       {user.status === "Banned" ? (
-        <form action={unbanUserAction}>
+        <form action={unbanUserFormAction}>
           <input name="userId" type="hidden" value={user.id} />
           <button
             className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -152,7 +152,7 @@ function UserActions({ user }: { user: AdminUser }) {
           </button>
         </form>
       ) : (
-        <form action={banUserAction}>
+        <form action={banUserFormAction}>
           <input name="userId" type="hidden" value={user.id} />
           <button
             className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
@@ -165,6 +165,24 @@ function UserActions({ user }: { user: AdminUser }) {
       )}
     </ActionToolbar>
   );
+}
+
+async function setUserRoleFormAction(formData: FormData) {
+  "use server";
+
+  await setUserRoleAction(formData);
+}
+
+async function unbanUserFormAction(formData: FormData) {
+  "use server";
+
+  await unbanUserAction(formData);
+}
+
+async function banUserFormAction(formData: FormData) {
+  "use server";
+
+  await banUserAction(formData);
 }
 
 function normalizeRole(role: string | string[] | null | undefined) {

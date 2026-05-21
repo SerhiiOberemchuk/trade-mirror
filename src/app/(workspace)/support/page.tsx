@@ -8,7 +8,7 @@ import {
   StatusBadge,
 } from "@/components/dashboard-shell";
 import { desc, eq } from "drizzle-orm";
-import { createSupportTicketAction } from "./actions";
+import { SupportTicketForm } from "./ticket-form";
 
 type SupportTicketRow = {
   id: string;
@@ -36,49 +36,7 @@ export default async function SupportPage() {
           description="Create a persisted support request"
           title="New ticket"
         >
-          <form action={createSupportTicketAction} className="space-y-4">
-            <label className="block">
-              <span className="text-sm font-medium">Subject</span>
-              <input
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                maxLength={120}
-                minLength={4}
-                name="subject"
-                placeholder="Withdrawal review question"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium">Priority</span>
-              <select
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                defaultValue="medium"
-                name="priority"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium">Message</span>
-              <textarea
-                className="mt-2 min-h-36 w-full resize-y rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                maxLength={2000}
-                minLength={10}
-                name="message"
-                placeholder="Describe what you need help with."
-              />
-            </label>
-
-            <button
-              className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300"
-              type="submit"
-            >
-              Submit ticket
-            </button>
-          </form>
+          <SupportTicketForm />
         </DashboardCard>
 
         <DashboardCard

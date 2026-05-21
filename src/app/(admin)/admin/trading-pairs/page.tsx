@@ -84,7 +84,7 @@ export default async function AdminTradingPairsPage() {
           description="Add a market to the simulated terminal"
           title="Add pair"
         >
-          <form action={createTradingPairAction} className="space-y-4">
+          <form action={createTradingPairFormAction} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Symbol</span>
               <input
@@ -180,7 +180,7 @@ function TradingPairActions({ pair }: { pair: TradingPairRow }) {
   return (
     <ActionToolbar>
       {pair.status === "enabled" ? (
-        <form action={pauseTradingPairAction}>
+        <form action={pauseTradingPairFormAction}>
           <input name="pairId" type="hidden" value={pair.id} />
           <button
             className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300"
@@ -190,7 +190,7 @@ function TradingPairActions({ pair }: { pair: TradingPairRow }) {
           </button>
         </form>
       ) : (
-        <form action={enableTradingPairAction}>
+        <form action={enableTradingPairFormAction}>
           <input name="pairId" type="hidden" value={pair.id} />
           <button
             className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -202,6 +202,24 @@ function TradingPairActions({ pair }: { pair: TradingPairRow }) {
       )}
     </ActionToolbar>
   );
+}
+
+async function createTradingPairFormAction(formData: FormData) {
+  "use server";
+
+  await createTradingPairAction(formData);
+}
+
+async function pauseTradingPairFormAction(formData: FormData) {
+  "use server";
+
+  await pauseTradingPairAction(formData);
+}
+
+async function enableTradingPairFormAction(formData: FormData) {
+  "use server";
+
+  await enableTradingPairAction(formData);
 }
 
 async function getTradingPairRows(): Promise<

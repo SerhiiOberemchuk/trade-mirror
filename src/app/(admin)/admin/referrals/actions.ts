@@ -3,6 +3,11 @@
 import { db } from "@/db";
 import { referralProfilesSchema } from "@/db/schema/referrals.schema";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import {
+  actionError,
+  actionSuccess,
+  type ActionResult,
+} from "@/server/actions/state";
 import { requireAdminSession } from "@/server/auth/session";
 import { invalidateAfterMutation } from "@/server/cache/revalidation";
 import { eq } from "drizzle-orm";
@@ -12,7 +17,7 @@ const ADMIN_REFERRALS_PATH = "/admin/referrals";
 const MIN_REWARD_CENTS = 0;
 const MAX_REWARD_CENTS = 100_000_00;
 
-export async function createReferralProfileAction(formData: FormData) {
+export async function createReferralProfileAction(formData: FormData): Promise<ActionResult> {
   await requireAdminSession();
 
   const referrerEmail = String(formData.get("referrerEmail") ?? "").trim().toLowerCase();
@@ -20,73 +25,85 @@ export async function createReferralProfileAction(formData: FormData) {
   const reward = Number(formData.get("reward"));
 
   if (!isValidEmail(referrerEmail)) {
-    throw new Error("Referrer email is invalid.");
+    return actionError("Referrer email is invalid.");
   }
 
   if (!/^[A-Z0-9-]{4,32}$/.test(code)) {
-    throw new Error("Referral code must be 4-32 characters and use A-Z, 0-9, or hyphen.");
+    return actionError("Referral code must be 4-32 characters and use A-Z, 0-9, or hyphen.");
   }
 
   if (!Number.isFinite(reward)) {
-    throw new Error("Referral reward is invalid.");
+    return actionError("Referral reward is invalid.");
   }
 
   const rewardCents = Math.round(reward * 100);
 
   if (rewardCents < MIN_REWARD_CENTS || rewardCents > MAX_REWARD_CENTS) {
-    throw new Error("Referral reward must be between $0.00 and $100,000.00.");
+    return actionError("Referral reward must be between $0.00 and $100,000.00.");
   }
 
-  const [referrer] = await db
-    .select()
-    .from(user)
-    .where(eq(user.email, referrerEmail))
-    .limit(1);
+  try {
+    const [referrer] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, referrerEmail))
+      .limit(1);
 
-  if (!referrer) {
-    throw new Error("Referrer user was not found.");
+    if (!referrer) {
+      return actionError("Referrer user was not found.");
+    }
+
+    await db.insert(referralProfilesSchema).values({
+      code,
+      referrerEmail: referrer.email,
+      referrerName: referrer.name,
+      referrerUserId: referrer.id,
+      rewardCents,
+    });
+
+    revalidateReferralAdmin();
+
+    return actionSuccess("Referral profile created.");
+  } catch {
+    return actionError("Unable to create this referral profile. Please try again.");
   }
-
-  await db.insert(referralProfilesSchema).values({
-    code,
-    referrerEmail: referrer.email,
-    referrerName: referrer.name,
-    referrerUserId: referrer.id,
-    rewardCents,
-  });
-
-  revalidateReferralAdmin();
 }
 
-export async function activateReferralProfileAction(formData: FormData) {
-  await updateReferralProfileStatus(formData, "active");
+export async function activateReferralProfileAction(formData: FormData): Promise<ActionResult> {
+  return updateReferralProfileStatus(formData, "active");
 }
 
-export async function pauseReferralProfileAction(formData: FormData) {
-  await updateReferralProfileStatus(formData, "paused");
+export async function pauseReferralProfileAction(formData: FormData): Promise<ActionResult> {
+  return updateReferralProfileStatus(formData, "paused");
 }
 
 async function updateReferralProfileStatus(
   formData: FormData,
   status: (typeof referralProfilesSchema.$inferSelect)["status"],
-) {
+): Promise<ActionResult> {
   await requireAdminSession();
 
   const profileId = String(formData.get("profileId") ?? "");
 
   if (!profileId) {
-    throw new Error("Referral profile request is invalid.");
+    return actionError("Referral profile request is invalid.");
   }
 
-  await db
-    .update(referralProfilesSchema)
-    .set({
-      status,
-      updatedAt: new Date(),
-    })
-    .where(eq(referralProfilesSchema.id, profileId));
+  try {
+    await db
+      .update(referralProfilesSchema)
+      .set({
+        status,
+        updatedAt: new Date(),
+      })
+      .where(eq(referralProfilesSchema.id, profileId));
 
-  revalidateReferralAdmin();
+    revalidateReferralAdmin();
+
+    return actionSuccess("Referral profile updated.");
+  } catch {
+    return actionError("Unable to update this referral profile. Please try again.");
+  }
 }
 
 function revalidateReferralAdmin() {

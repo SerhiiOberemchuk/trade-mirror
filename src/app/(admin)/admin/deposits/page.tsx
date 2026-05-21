@@ -101,7 +101,7 @@ function DepositActions({ request }: { request: DepositRow }) {
 
   return (
     <ActionToolbar>
-      <form action={approveDepositAction}>
+      <form action={approveDepositFormAction}>
         <input name="depositId" type="hidden" value={request.id} />
         <button
           className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -110,7 +110,7 @@ function DepositActions({ request }: { request: DepositRow }) {
           Approve
         </button>
       </form>
-      <form action={rejectDepositAction}>
+      <form action={rejectDepositFormAction}>
         <input name="depositId" type="hidden" value={request.id} />
         <button
           className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400"
@@ -121,6 +121,18 @@ function DepositActions({ request }: { request: DepositRow }) {
       </form>
     </ActionToolbar>
   );
+}
+
+async function approveDepositFormAction(formData: FormData) {
+  "use server";
+
+  await approveDepositAction(formData);
+}
+
+async function rejectDepositFormAction(formData: FormData) {
+  "use server";
+
+  await rejectDepositAction(formData);
 }
 
 async function getDepositRows(): Promise<

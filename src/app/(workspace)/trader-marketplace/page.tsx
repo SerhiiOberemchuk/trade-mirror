@@ -7,7 +7,8 @@ import {
   StatusBadge,
 } from "@/components/dashboard-shell";
 import { desc, eq } from "drizzle-orm";
-import { publishTraderProfileAction, startCopyTradingAction } from "./actions";
+import { startCopyTradingAction } from "./actions";
+import { PublishProfileForm } from "./publish-profile-form";
 
 type TraderProfileRow = {
   id: string;
@@ -35,90 +36,7 @@ export default async function TraderMarketplacePage() {
           description="Publish a simulated provider profile"
           title="Publish profile"
         >
-          <form action={publishTraderProfileAction} className="space-y-4">
-            <label className="block">
-              <span className="text-sm font-medium">Display name</span>
-              <input
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                maxLength={80}
-                minLength={3}
-                name="displayName"
-                placeholder="Mira Quant"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium">Strategy</span>
-              <input
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                maxLength={120}
-                minLength={3}
-                name="strategy"
-                placeholder="Momentum grid"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium">Risk</span>
-              <select
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                defaultValue="medium"
-                name="riskLevel"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </label>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              <label className="block">
-                <span className="text-sm font-medium">Monthly PnL</span>
-                <input
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                  defaultValue="24"
-                  max="300"
-                  min="-100"
-                  name="monthlyPnl"
-                  step="0.01"
-                  type="number"
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-sm font-medium">Win rate</span>
-                <input
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                  defaultValue="68"
-                  max="100"
-                  min="0"
-                  name="winRate"
-                  step="0.01"
-                  type="number"
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-sm font-medium">Drawdown</span>
-                <input
-                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                  defaultValue="8"
-                  max="100"
-                  min="0"
-                  name="maxDrawdown"
-                  step="0.01"
-                  type="number"
-                />
-              </label>
-            </div>
-
-            <button
-              className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300"
-              type="submit"
-            >
-              Publish profile
-            </button>
-          </form>
+          <PublishProfileForm />
         </DashboardCard>
 
         <DashboardCard
@@ -150,7 +68,7 @@ export default async function TraderMarketplacePage() {
                     <Metric label="DD" value={trader.drawdown} />
                   </div>
                   <form
-                    action={startCopyTradingAction}
+                    action={startCopyTradingFormAction}
                     className="mt-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
                   >
                     <input
@@ -210,6 +128,12 @@ export default async function TraderMarketplacePage() {
       </section>
     </>
   );
+}
+
+async function startCopyTradingFormAction(formData: FormData) {
+  "use server";
+
+  await startCopyTradingAction(formData);
 }
 
 async function getTraderProfiles(): Promise<

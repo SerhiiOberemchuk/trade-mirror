@@ -44,6 +44,8 @@ Last updated: 2026-05-21
 - [x] Added persisted referral profile schema and admin create/activate/pause controls.
 - [x] Added user trader profile route with own provider profile overview and publish/pause controls.
 - [x] Added project rule to avoid giant files and keep one file focused on one responsibility.
+- [x] Added project rule for Server Actions to return typed action results for expected validation/errors and reserve `throw` for auth, framework control flow, or caught server helpers.
+- [x] Refactored route Server Actions to avoid unhandled validation throws and return safe action result messages for user/admin mutation workflows.
 - [x] Split Drizzle app schemas into focused `*.schema.ts` domain files and removed the schema barrel `index.ts`.
 - [x] Renamed Drizzle table exports to explicit `*Schema` names and updated app imports to use concrete schema modules.
 - [x] Split terminal trading actions into focused server modules for validation, lifecycle, copy automation, risk exits, and revalidation.

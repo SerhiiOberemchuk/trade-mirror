@@ -114,7 +114,7 @@ export default async function TraderProfilePage() {
 
 function TraderProfileActions({ profile }: { profile: TraderProfileRow }) {
   return profile.status === "published" ? (
-    <form action={pauseTraderProfileAction}>
+    <form action={pauseTraderProfileFormAction}>
       <input name="profileId" type="hidden" value={profile.id} />
       <button
         className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300"
@@ -124,7 +124,7 @@ function TraderProfileActions({ profile }: { profile: TraderProfileRow }) {
       </button>
     </form>
   ) : (
-    <form action={publishOwnTraderProfileAction}>
+    <form action={publishOwnTraderProfileFormAction}>
       <input name="profileId" type="hidden" value={profile.id} />
       <button
         className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -134,6 +134,18 @@ function TraderProfileActions({ profile }: { profile: TraderProfileRow }) {
       </button>
     </form>
   );
+}
+
+async function pauseTraderProfileFormAction(formData: FormData) {
+  "use server";
+
+  await pauseTraderProfileAction(formData);
+}
+
+async function publishOwnTraderProfileFormAction(formData: FormData) {
+  "use server";
+
+  await publishOwnTraderProfileAction(formData);
 }
 
 async function getTraderProfileState(userId: string): Promise<TraderProfileState> {

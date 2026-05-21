@@ -3,44 +3,55 @@
 import { db } from "@/db";
 import { depositRequestsSchema } from "@/db/schema/wallet.schema";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import {
+  actionError,
+  actionSuccess,
+  type ActionResult,
+} from "@/server/actions/state";
 import { requireAdminSession } from "@/server/auth/session";
 import { invalidateAfterMutation } from "@/server/cache/revalidation";
 import { eq } from "drizzle-orm";
 
 const ADMIN_DEPOSITS_PATH = "/admin/deposits";
 
-export async function approveDepositAction(formData: FormData) {
-  await reviewDeposit(formData, "approved");
+export async function approveDepositAction(formData: FormData): Promise<ActionResult> {
+  return reviewDeposit(formData, "approved");
 }
 
-export async function rejectDepositAction(formData: FormData) {
-  await reviewDeposit(formData, "rejected");
+export async function rejectDepositAction(formData: FormData): Promise<ActionResult> {
+  return reviewDeposit(formData, "rejected");
 }
 
 async function reviewDeposit(
   formData: FormData,
   status: "approved" | "rejected",
-) {
+): Promise<ActionResult> {
   const session = await requireAdminSession();
   const depositId = String(formData.get("depositId") ?? "");
 
   if (!depositId) {
-    throw new Error("Invalid deposit review request.");
+    return actionError("Invalid deposit review request.");
   }
 
-  await db
-    .update(depositRequestsSchema)
-    .set({
-      status,
-      reviewedAt: new Date(),
-      reviewedById: session.user.id,
-      reviewNote:
-        status === "approved" ? "Approved by admin." : "Rejected by admin.",
-    })
-    .where(eq(depositRequestsSchema.id, depositId));
+  try {
+    await db
+      .update(depositRequestsSchema)
+      .set({
+        status,
+        reviewedAt: new Date(),
+        reviewedById: session.user.id,
+        reviewNote:
+          status === "approved" ? "Approved by admin." : "Rejected by admin.",
+      })
+      .where(eq(depositRequestsSchema.id, depositId));
 
-  invalidateAfterMutation({
-    paths: [ADMIN_DEPOSITS_PATH],
-    tags: [CACHE_TAGS.adminDeposits],
-  });
+    invalidateAfterMutation({
+      paths: [ADMIN_DEPOSITS_PATH],
+      tags: [CACHE_TAGS.adminDeposits],
+    });
+
+    return actionSuccess("Deposit review updated.");
+  } catch {
+    return actionError("Unable to update this deposit review. Please try again.");
+  }
 }

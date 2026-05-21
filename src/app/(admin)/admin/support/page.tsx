@@ -112,7 +112,7 @@ export default async function AdminSupportPage() {
 function SupportTicketActions({ ticket }: { ticket: SupportTicketRow }) {
   return (
     <div className="min-w-72 space-y-3">
-      <form action={replySupportTicketAction} className="space-y-2">
+      <form action={replySupportTicketFormAction} className="space-y-2">
         <input name="ticketId" type="hidden" value={ticket.id} />
         <textarea
           className="min-h-20 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none transition-colors duration-150 placeholder:text-muted focus:border-warning/50 focus:ring-2 focus:ring-warning/20"
@@ -132,7 +132,7 @@ function SupportTicketActions({ ticket }: { ticket: SupportTicketRow }) {
 
       <ActionToolbar>
         {ticket.status === "closed" ? (
-          <form action={reopenSupportTicketAction}>
+          <form action={reopenSupportTicketFormAction}>
             <input name="ticketId" type="hidden" value={ticket.id} />
             <button
               className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300"
@@ -142,7 +142,7 @@ function SupportTicketActions({ ticket }: { ticket: SupportTicketRow }) {
             </button>
           </form>
         ) : (
-          <form action={closeSupportTicketAction}>
+          <form action={closeSupportTicketFormAction}>
             <input name="ticketId" type="hidden" value={ticket.id} />
             <button
               className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -155,6 +155,24 @@ function SupportTicketActions({ ticket }: { ticket: SupportTicketRow }) {
       </ActionToolbar>
     </div>
   );
+}
+
+async function replySupportTicketFormAction(formData: FormData) {
+  "use server";
+
+  await replySupportTicketAction(formData);
+}
+
+async function reopenSupportTicketFormAction(formData: FormData) {
+  "use server";
+
+  await reopenSupportTicketAction(formData);
+}
+
+async function closeSupportTicketFormAction(formData: FormData) {
+  "use server";
+
+  await closeSupportTicketAction(formData);
 }
 
 async function getSupportTicketRows(): Promise<

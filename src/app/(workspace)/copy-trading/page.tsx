@@ -175,7 +175,7 @@ function CopyAllocationActions({
   return (
     <ActionToolbar>
       {allocation.status === "active" ? (
-        <form action={pauseCopySettingAction}>
+        <form action={pauseCopySettingFormAction}>
           <input name="settingId" type="hidden" value={allocation.id} />
           <button
             className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300"
@@ -185,7 +185,7 @@ function CopyAllocationActions({
           </button>
         </form>
       ) : (
-        <form action={resumeCopySettingAction}>
+        <form action={resumeCopySettingFormAction}>
           <input name="settingId" type="hidden" value={allocation.id} />
           <button
             className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -197,6 +197,18 @@ function CopyAllocationActions({
       )}
     </ActionToolbar>
   );
+}
+
+async function pauseCopySettingFormAction(formData: FormData) {
+  "use server";
+
+  await pauseCopySettingAction(formData);
+}
+
+async function resumeCopySettingFormAction(formData: FormData) {
+  "use server";
+
+  await resumeCopySettingAction(formData);
 }
 
 async function getCopyTradingState(userId: string): Promise<

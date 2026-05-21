@@ -80,7 +80,7 @@ export default async function AdminBonusesPage() {
           description="Create a simulated bonus campaign"
           title="New bonus"
         >
-          <form action={createBonusCampaignAction} className="space-y-4">
+          <form action={createBonusCampaignFormAction} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Campaign name</span>
               <input
@@ -174,7 +174,7 @@ function BonusCampaignActions({ campaign }: { campaign: BonusCampaignRow }) {
   return (
     <ActionToolbar>
       {campaign.status === "enabled" ? (
-        <form action={pauseBonusCampaignAction}>
+        <form action={pauseBonusCampaignFormAction}>
           <input name="campaignId" type="hidden" value={campaign.id} />
           <button
             className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300"
@@ -184,7 +184,7 @@ function BonusCampaignActions({ campaign }: { campaign: BonusCampaignRow }) {
           </button>
         </form>
       ) : (
-        <form action={enableBonusCampaignAction}>
+        <form action={enableBonusCampaignFormAction}>
           <input name="campaignId" type="hidden" value={campaign.id} />
           <button
             className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -196,6 +196,24 @@ function BonusCampaignActions({ campaign }: { campaign: BonusCampaignRow }) {
       )}
     </ActionToolbar>
   );
+}
+
+async function createBonusCampaignFormAction(formData: FormData) {
+  "use server";
+
+  await createBonusCampaignAction(formData);
+}
+
+async function pauseBonusCampaignFormAction(formData: FormData) {
+  "use server";
+
+  await pauseBonusCampaignAction(formData);
+}
+
+async function enableBonusCampaignFormAction(formData: FormData) {
+  "use server";
+
+  await enableBonusCampaignAction(formData);
 }
 
 async function getBonusCampaignRows(): Promise<

@@ -70,6 +70,10 @@ type NewPosition = typeof simulatedPositionsSchema.$inferInsert;
 - Route `actions.ts` files should stay thin.
 - Move validation, lifecycle logic, provider adapters, calculations, and shared helpers into focused server modules.
 - Every Server Action must validate input on the server.
+- Expected form and payload validation failures must not use `throw new Error()`.
+- Server Actions must return a typed result for expected outcomes, usually `ActionResult` from `src/server/actions/state.ts`, with a clear `status` and `message`.
+- Use `try/catch` around database writes, provider calls, and other failure-prone mutation work so unexpected failures become safe user-facing messages.
+- Keep `throw` only for framework control flow, authentication/authorization guards, or server-only helpers where the caller intentionally catches and translates the failure.
 - Mutations should invalidate data through centralized helpers, not scattered raw cache calls.
 - Use `updateTag()` for read-your-writes Server Action invalidation.
 - Use `revalidatePath()` alongside tags when the route shell or route payload must refresh.

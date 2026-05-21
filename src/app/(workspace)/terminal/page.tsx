@@ -117,7 +117,7 @@ export default async function TerminalPage() {
         </DashboardCard>
         <DashboardCard
           action={
-            <form action={checkRiskExitsAction}>
+            <form action={checkRiskExitsFormAction}>
               <button
                 className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted transition duration-150 hover:border-primary/50 hover:text-foreground"
                 type="submit"
@@ -130,7 +130,7 @@ export default async function TerminalPage() {
           title="Demo order"
         >
           {state.kind === "ready" && state.pairs.length > 0 ? (
-            <form action={createSimulatedOrderAction} className="space-y-4">
+            <form action={createSimulatedOrderFormAction} className="space-y-4">
               <label className="block">
                 <span className="text-sm font-medium">Pair</span>
                 <select
@@ -285,7 +285,7 @@ export default async function TerminalPage() {
 function OpenPositionActions({ position }: { position: TerminalOpenPositionRow }) {
   return (
     <ActionToolbar>
-      <form action={closeSimulatedPositionAction}>
+      <form action={closeSimulatedPositionFormAction}>
         <input name="positionId" type="hidden" value={position.id} />
         <button
           className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400"
@@ -296,4 +296,22 @@ function OpenPositionActions({ position }: { position: TerminalOpenPositionRow }
       </form>
     </ActionToolbar>
   );
+}
+
+async function checkRiskExitsFormAction() {
+  "use server";
+
+  await checkRiskExitsAction();
+}
+
+async function createSimulatedOrderFormAction(formData: FormData) {
+  "use server";
+
+  await createSimulatedOrderAction(formData);
+}
+
+async function closeSimulatedPositionFormAction(formData: FormData) {
+  "use server";
+
+  await closeSimulatedPositionAction(formData);
 }

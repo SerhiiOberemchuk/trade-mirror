@@ -129,7 +129,7 @@ function KycActions({ request }: { request: KycReviewRow }) {
         placeholder="Optional review note"
       />
       <ActionToolbar>
-        <form action={approveKycRequestAction} id={`approve-${request.id}`}>
+        <form action={approveKycRequestFormAction} id={`approve-${request.id}`}>
           <input name="requestId" type="hidden" value={request.id} />
           <button
             className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -138,7 +138,7 @@ function KycActions({ request }: { request: KycReviewRow }) {
             Approve
           </button>
         </form>
-        <form action={rejectKycRequestAction}>
+        <form action={rejectKycRequestFormAction}>
           <input name="requestId" type="hidden" value={request.id} />
           <input name="reviewNote" type="hidden" value="Rejected by admin." />
           <button
@@ -151,6 +151,18 @@ function KycActions({ request }: { request: KycReviewRow }) {
       </ActionToolbar>
     </div>
   );
+}
+
+async function approveKycRequestFormAction(formData: FormData) {
+  "use server";
+
+  await approveKycRequestAction(formData);
+}
+
+async function rejectKycRequestFormAction(formData: FormData) {
+  "use server";
+
+  await rejectKycRequestAction(formData);
 }
 
 async function getKycReviewRows(): Promise<

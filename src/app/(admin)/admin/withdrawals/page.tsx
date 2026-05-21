@@ -103,7 +103,7 @@ function WithdrawalActions({ request }: { request: WithdrawalRow }) {
 
   return (
     <ActionToolbar>
-      <form action={approveWithdrawalAction}>
+      <form action={approveWithdrawalFormAction}>
         <input name="withdrawalId" type="hidden" value={request.id} />
         <button
           className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -112,7 +112,7 @@ function WithdrawalActions({ request }: { request: WithdrawalRow }) {
           Approve
         </button>
       </form>
-      <form action={rejectWithdrawalAction}>
+      <form action={rejectWithdrawalFormAction}>
         <input name="withdrawalId" type="hidden" value={request.id} />
         <button
           className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition duration-150 hover:bg-red-400"
@@ -123,6 +123,18 @@ function WithdrawalActions({ request }: { request: WithdrawalRow }) {
       </form>
     </ActionToolbar>
   );
+}
+
+async function approveWithdrawalFormAction(formData: FormData) {
+  "use server";
+
+  await approveWithdrawalAction(formData);
+}
+
+async function rejectWithdrawalFormAction(formData: FormData) {
+  "use server";
+
+  await rejectWithdrawalAction(formData);
 }
 
 async function getWithdrawalRows(): Promise<

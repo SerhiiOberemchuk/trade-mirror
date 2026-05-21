@@ -8,7 +8,7 @@ import {
   StatusBadge,
 } from "@/components/dashboard-shell";
 import { desc, eq } from "drizzle-orm";
-import { submitKycRequestAction } from "./actions";
+import { VerificationForm } from "./verification-form";
 
 type KycRequestRow = {
   id: string;
@@ -37,60 +37,7 @@ export default async function VerificationPage() {
           description="Submit a simulated document review request"
           title="Verification request"
         >
-          <form action={submitKycRequestAction} className="space-y-4">
-            <label className="block">
-              <span className="text-sm font-medium">Legal name</span>
-              <input
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                maxLength={120}
-                minLength={3}
-                name="legalName"
-                placeholder="Serhii Oberemchuk"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium">Country</span>
-              <input
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                maxLength={80}
-                minLength={2}
-                name="country"
-                placeholder="Ukraine"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium">Document type</span>
-              <select
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                defaultValue="identity"
-                name="documentType"
-              >
-                <option value="identity">Identity document</option>
-                <option value="address">Address proof</option>
-                <option value="business">Business document</option>
-              </select>
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-medium">Document reference</span>
-              <input
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                maxLength={160}
-                minLength={4}
-                name="documentReference"
-                placeholder="Demo upload ID or file reference"
-              />
-            </label>
-
-            <button
-              className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-slate-950 transition duration-150 hover:bg-cyan-300"
-              type="submit"
-            >
-              Submit verification
-            </button>
-          </form>
+          <VerificationForm />
         </DashboardCard>
 
         <DashboardCard

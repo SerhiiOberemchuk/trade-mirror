@@ -87,7 +87,7 @@ export default async function AdminReferralsPage() {
 
       <section className="grid gap-5 xl:grid-cols-[0.75fr_1.25fr]">
         <AdminCard description="Create a referral code for an existing user." title="New referral profile">
-          <form action={createReferralProfileAction} className="space-y-4">
+          <form action={createReferralProfileFormAction} className="space-y-4">
             <label className="block text-sm">
               <span className="font-medium">Referrer email</span>
               <input
@@ -161,7 +161,7 @@ export default async function AdminReferralsPage() {
 
 function ReferralProfileActions({ profile }: { profile: ReferralProfileRow }) {
   return profile.status === "active" ? (
-    <form action={pauseReferralProfileAction}>
+    <form action={pauseReferralProfileFormAction}>
       <input name="profileId" type="hidden" value={profile.id} />
       <button
         className="rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-amber-300"
@@ -171,7 +171,7 @@ function ReferralProfileActions({ profile }: { profile: ReferralProfileRow }) {
       </button>
     </form>
   ) : (
-    <form action={activateReferralProfileAction}>
+    <form action={activateReferralProfileFormAction}>
       <input name="profileId" type="hidden" value={profile.id} />
       <button
         className="rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-slate-950 transition duration-150 hover:bg-emerald-300"
@@ -181,6 +181,24 @@ function ReferralProfileActions({ profile }: { profile: ReferralProfileRow }) {
       </button>
     </form>
   );
+}
+
+async function createReferralProfileFormAction(formData: FormData) {
+  "use server";
+
+  await createReferralProfileAction(formData);
+}
+
+async function pauseReferralProfileFormAction(formData: FormData) {
+  "use server";
+
+  await pauseReferralProfileAction(formData);
+}
+
+async function activateReferralProfileFormAction(formData: FormData) {
+  "use server";
+
+  await activateReferralProfileAction(formData);
 }
 
 async function getReferralProfileRows(): Promise<

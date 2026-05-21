@@ -18,6 +18,7 @@ This project uses Next.js 16.2.6 with APIs and conventions that may differ from 
 - Prefer project patterns and library APIs from Next.js, Better Auth, Drizzle, React, and Tailwind before adding custom abstractions.
 - Avoid giant files. One file should have one clear responsibility where possible; when actions, pages, services, or utilities grow, split them into a logical folder with smaller focused files.
 - Keep route `actions.ts` files thin. Move validation, domain lifecycle logic, provider adapters, and shared helpers into focused server modules.
+- Do not use `throw new Error()` for expected form validation or invalid payloads in route Server Actions. Return typed action results with clear `status` and `message`; wrap database/provider mutation work in `try/catch` and show safe user-facing messages.
 - Keep Drizzle domain schemas split by responsibility inside `src/db/schema` as focused `*.schema.ts` files. Do not add a schema barrel `index.ts`; Drizzle can read the schema folder directly and application code should import concrete schema modules.
 - Name Drizzle table exports with an explicit `Schema` suffix, for example `withdrawalRequestsSchema`, so imports make database usage obvious.
 - Derive domain row/insert/value types from Drizzle schemas and enums (`$inferSelect`, `$inferInsert`, `enumValues`) instead of manually repeating union types, table shapes, or status values.
