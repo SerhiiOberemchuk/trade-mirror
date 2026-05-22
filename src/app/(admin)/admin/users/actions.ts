@@ -13,35 +13,6 @@ import { headers } from "next/headers";
 
 const ADMIN_USERS_PATH = "/admin/users";
 
-export async function setUserRoleAction(formData: FormData): Promise<ActionResult> {
-  await requireAdminSession();
-
-  const userId = String(formData.get("userId") ?? "");
-  const role = String(formData.get("role") ?? "");
-
-  if (!userId || !["admin", "user"].includes(role)) {
-    return actionError("Invalid user role update.");
-  }
-
-  const safeRole = role as "admin" | "user";
-
-  try {
-    await auth.api.setRole({
-      body: {
-        userId,
-        role: safeRole,
-      },
-      headers: await headers(),
-    });
-
-    invalidateAdminUsers();
-
-    return actionSuccess("User role updated.");
-  } catch {
-    return actionError("Unable to update this user role. Please try again.");
-  }
-}
-
 export async function banUserAction(formData: FormData): Promise<ActionResult> {
   await requireAdminSession();
 

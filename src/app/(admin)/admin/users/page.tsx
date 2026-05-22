@@ -12,7 +12,6 @@ import {
 import { headers } from "next/headers";
 import {
   banUserAction,
-  setUserRoleAction,
   unbanUserAction,
 } from "./actions";
 
@@ -125,22 +124,8 @@ export default async function AdminUsersPage() {
 }
 
 function UserActions({ user }: { user: AdminUser }) {
-  const nextRole = user.role === "admin" ? "user" : "admin";
-
   return (
     <ActionToolbar>
-      <form action={setUserRoleFormAction}>
-        <input name="userId" type="hidden" value={user.id} />
-        <input name="role" type="hidden" value={nextRole} />
-        <button
-          className="rounded-md border border-border px-3 py-1.5 text-xs text-muted transition duration-150 hover:border-warning/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={user.isCurrentAdmin}
-          type="submit"
-        >
-          Make {nextRole}
-        </button>
-      </form>
-
       {user.status === "Banned" ? (
         <form action={unbanUserFormAction}>
           <input name="userId" type="hidden" value={user.id} />
@@ -165,12 +150,6 @@ function UserActions({ user }: { user: AdminUser }) {
       )}
     </ActionToolbar>
   );
-}
-
-async function setUserRoleFormAction(formData: FormData) {
-  "use server";
-
-  await setUserRoleAction(formData);
 }
 
 async function unbanUserFormAction(formData: FormData) {

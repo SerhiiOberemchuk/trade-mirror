@@ -32,7 +32,7 @@ export const dashboardNavItems = [
 
 export const adminNavItems = [
   { label: "Admin Overview", href: "/admin", symbol: "AO" },
-  { label: "Users", href: "/admin/users", symbol: "US" },
+  { label: "User Management", href: "/admin/users", symbol: "US" },
   { label: "Trading Pairs", href: "/admin/trading-pairs", symbol: "TP" },
   { label: "Deposits", href: "/admin/deposits", symbol: "DP" },
   { label: "Withdrawals", href: "/admin/withdrawals", symbol: "WD" },

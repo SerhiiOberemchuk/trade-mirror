@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin-shell";
+import { hasAdminRole } from "@/lib/auth-roles";
 import { requireAdminSession } from "@/server/auth/session";
 import { getUnreadNotificationCount } from "@/server/notifications/notifications";
 import { Suspense } from "react";
@@ -25,6 +26,7 @@ async function AuthenticatedAdmin({
 
   return (
     <AdminShell
+      canSwitchWorkspaceMode={hasAdminRole(session.user.role)}
       unreadNotifications={unreadNotifications}
       user={session.user}
     >

@@ -22,28 +22,37 @@ type ShellUser = {
 };
 
 type AdminShellProps = {
+  canSwitchWorkspaceMode: boolean;
   children: React.ReactNode;
   unreadNotifications: number;
   user: ShellUser;
 };
 
 export function AdminShell({
+  canSwitchWorkspaceMode,
   children,
   unreadNotifications,
   user,
 }: AdminShellProps) {
+  const navItems = canSwitchWorkspaceMode
+    ? [
+        ...adminNavItems,
+        { label: "Client Workspace", href: "/dashboard" as Route, symbol: "CL" },
+      ]
+    : adminNavItems;
+
   return (
     <WorkspaceFrame
       balanceLabel="Open reviews"
       balanceValue="42"
       brandSubtitle="Operations workspace"
       brandTitle="TradeMirror Admin"
-      navItems={adminNavItems}
+      navItems={navItems}
       notificationHref={"/admin/notifications" as Route}
       unreadNotifications={unreadNotifications}
       searchLabel="Admin search"
       searchPlaceholder="Search users, trades, requests"
-      switchLink={{ href: "/dashboard", label: "Client workspace" }}
+      switchLink={canSwitchWorkspaceMode ? { href: "/dashboard", label: "Client workspace" } : undefined}
       tone="warning"
       user={user}
     >

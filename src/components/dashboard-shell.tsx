@@ -10,7 +10,6 @@ import {
 } from "@/components/dashboard/primitives";
 export type { DataTableColumn } from "@/components/dashboard/primitives";
 import { WorkspaceFrame } from "@/components/dashboard/workspace-frame";
-import { hasAdminRole } from "@/lib/auth-roles";
 import { dashboardNavItems } from "@/lib/navigation";
 import type { Route } from "next";
 
@@ -22,28 +21,37 @@ type ShellUser = {
 };
 
 type DashboardShellProps = {
+  canSwitchWorkspaceMode: boolean;
   children: React.ReactNode;
   unreadNotifications: number;
   user: ShellUser;
 };
 
 export function DashboardShell({
+  canSwitchWorkspaceMode,
   children,
   unreadNotifications,
   user,
 }: DashboardShellProps) {
+  const navItems = canSwitchWorkspaceMode
+    ? [
+        { label: "Admin Panel", href: "/admin" as Route, symbol: "AD" },
+        ...dashboardNavItems,
+      ]
+    : dashboardNavItems;
+
   return (
     <WorkspaceFrame
       balanceLabel="Demo balance"
       balanceValue="$125,420.80"
       brandSubtitle="User workspace"
       brandTitle="TradeMirror"
-      navItems={dashboardNavItems}
+      navItems={navItems}
       notificationHref={"/notifications" as Route}
       unreadNotifications={unreadNotifications}
       searchLabel="Search"
       searchPlaceholder="Search pairs, traders, tickets"
-      switchLink={hasAdminRole(user.role) ? { href: "/admin", label: "Admin workspace" } : undefined}
+      switchLink={canSwitchWorkspaceMode ? { href: "/admin", label: "Admin workspace" } : undefined}
       user={user}
     >
       {children}

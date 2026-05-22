@@ -1,4 +1,5 @@
 import { DashboardShell } from "@/components/dashboard-shell";
+import { hasAdminRole } from "@/lib/auth-roles";
 import { requireSession } from "@/server/auth/session";
 import { getUnreadNotificationCount } from "@/server/notifications/notifications";
 import { Suspense } from "react";
@@ -25,6 +26,7 @@ async function AuthenticatedWorkspace({
 
   return (
     <DashboardShell
+      canSwitchWorkspaceMode={hasAdminRole(session.user.role)}
       unreadNotifications={unreadNotifications}
       user={session.user}
     >
