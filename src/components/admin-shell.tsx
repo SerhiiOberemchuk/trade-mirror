@@ -12,7 +12,6 @@ import {
 export type { DataTableColumn } from "@/components/dashboard/primitives";
 import { WorkspaceFrame } from "@/components/dashboard/workspace-frame";
 import { adminNavItems } from "@/lib/navigation";
-import { getUnreadNotificationCount } from "@/server/notifications/notifications";
 import type { Route } from "next";
 
 type ShellUser = {
@@ -24,12 +23,15 @@ type ShellUser = {
 
 type AdminShellProps = {
   children: React.ReactNode;
+  unreadNotifications: number;
   user: ShellUser;
 };
 
-export async function AdminShell({ children, user }: AdminShellProps) {
-  const unreadNotifications = await getUnreadNotificationCount(user.id);
-
+export function AdminShell({
+  children,
+  unreadNotifications,
+  user,
+}: AdminShellProps) {
   return (
     <WorkspaceFrame
       balanceLabel="Open reviews"

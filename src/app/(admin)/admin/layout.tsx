@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin-shell";
 import { requireAdminSession } from "@/server/auth/session";
+import { getUnreadNotificationCount } from "@/server/notifications/notifications";
 import { Suspense } from "react";
 
 export default function AdminLayout({
@@ -20,8 +21,16 @@ async function AuthenticatedAdmin({
   children: React.ReactNode;
 }>) {
   const session = await requireAdminSession();
+  const unreadNotifications = await getUnreadNotificationCount(session.user.id);
 
-  return <AdminShell user={session.user}>{children}</AdminShell>;
+  return (
+    <AdminShell
+      unreadNotifications={unreadNotifications}
+      user={session.user}
+    >
+      {children}
+    </AdminShell>
+  );
 }
 
 function AdminShellFallback() {

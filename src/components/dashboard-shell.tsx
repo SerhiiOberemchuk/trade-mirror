@@ -12,7 +12,6 @@ export type { DataTableColumn } from "@/components/dashboard/primitives";
 import { WorkspaceFrame } from "@/components/dashboard/workspace-frame";
 import { hasAdminRole } from "@/lib/auth-roles";
 import { dashboardNavItems } from "@/lib/navigation";
-import { getUnreadNotificationCount } from "@/server/notifications/notifications";
 import type { Route } from "next";
 
 type ShellUser = {
@@ -24,12 +23,15 @@ type ShellUser = {
 
 type DashboardShellProps = {
   children: React.ReactNode;
+  unreadNotifications: number;
   user: ShellUser;
 };
 
-export async function DashboardShell({ children, user }: DashboardShellProps) {
-  const unreadNotifications = await getUnreadNotificationCount(user.id);
-
+export function DashboardShell({
+  children,
+  unreadNotifications,
+  user,
+}: DashboardShellProps) {
   return (
     <WorkspaceFrame
       balanceLabel="Demo balance"

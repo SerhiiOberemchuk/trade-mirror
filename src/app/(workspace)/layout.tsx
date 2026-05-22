@@ -1,5 +1,6 @@
 import { DashboardShell } from "@/components/dashboard-shell";
 import { requireSession } from "@/server/auth/session";
+import { getUnreadNotificationCount } from "@/server/notifications/notifications";
 import { Suspense } from "react";
 
 export default function WorkspaceLayout({
@@ -20,8 +21,16 @@ async function AuthenticatedWorkspace({
   children: React.ReactNode;
 }>) {
   const session = await requireSession();
+  const unreadNotifications = await getUnreadNotificationCount(session.user.id);
 
-  return <DashboardShell user={session.user}>{children}</DashboardShell>;
+  return (
+    <DashboardShell
+      unreadNotifications={unreadNotifications}
+      user={session.user}
+    >
+      {children}
+    </DashboardShell>
+  );
 }
 
 function WorkspaceShellFallback() {

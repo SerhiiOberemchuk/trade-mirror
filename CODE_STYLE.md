@@ -28,6 +28,10 @@ import { withdrawalRequestsSchema } from "@/db/schema/wallet.schema";
 
 ## Database And Drizzle
 
+- Database access is server-only. Only Server Components, layouts, Route Handlers, Server Actions, and focused modules under `src/server/**` may import `@/db` or execute Drizzle/Neon queries.
+- Client Components and client-only files must never import `@/db`, `@/lib/auth`, `src/server/**` modules that touch the database, or any barrel that re-exports database-backed helpers.
+- Shared UI modules and UI primitive barrels must stay database-free. If a shell needs database data, read it in the server route/layout and pass plain serializable props into the shell or Client Component.
+- Keep `src/db/index.ts` protected with `import "server-only";` so accidental client imports fail during build instead of leaking database code to the browser.
 - Domain schemas live in `src/db/schema` as focused `*.schema.ts` files.
 - `drizzle.config.ts` should point Drizzle Kit at the schema folder, not at a schema barrel:
 
