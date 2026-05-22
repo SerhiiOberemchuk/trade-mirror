@@ -53,13 +53,34 @@ async function MarketsContent() {
                   <th className="px-5 py-3 font-medium">Last price</th>
                   <th className="px-5 py-3 font-medium">24h change</th>
                   <th className="px-5 py-3 font-medium">Volume</th>
+                  <th className="px-5 py-3 font-medium">Market cap</th>
                   <th className="px-5 py-3 font-medium">Spread</th>
                 </tr>
               </thead>
               <tbody>
                 {markets.rows.map((market) => (
                   <tr className="border-b border-border/70 last:border-0" key={market.pair}>
-                    <td className="px-5 py-4 font-semibold">{market.pair}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        {market.logoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            alt=""
+                            className="size-7 rounded-full"
+                            loading="lazy"
+                            src={market.logoUrl}
+                          />
+                        ) : (
+                          <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                            {market.pair.slice(0, 2)}
+                          </span>
+                        )}
+                        <div>
+                          <p className="font-semibold">{market.pair}</p>
+                          <p className="text-xs text-muted">{market.name}</p>
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-5 py-4 font-mono">{market.price}</td>
                     <td
                       className={`px-5 py-4 font-mono ${
@@ -69,6 +90,7 @@ async function MarketsContent() {
                       {market.change}
                     </td>
                     <td className="px-5 py-4 font-mono text-muted">{market.volume}</td>
+                    <td className="px-5 py-4 font-mono text-muted">{market.marketCap}</td>
                     <td className="px-5 py-4 font-mono text-muted">{market.spread}</td>
                   </tr>
                 ))}

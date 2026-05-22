@@ -58,6 +58,7 @@ export function WorkspaceFrame({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [liveUnreadNotifications, setLiveUnreadNotifications] = useState(unreadNotifications);
   const previousUnreadCount = useRef(unreadNotifications);
   const mobileNavId = useId();
   const initials = getInitials(user.name);
@@ -80,17 +81,48 @@ export function WorkspaceFrame({
   }, [isMobileNavOpen]);
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function refreshUnreadCount() {
+      try {
+        const response = await fetch("/api/notifications/unread", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = await response.json() as { unreadCount?: number };
+        const nextCount = Number(payload.unreadCount ?? 0);
+
+        if (isMounted && Number.isFinite(nextCount)) {
+          setLiveUnreadNotifications(nextCount);
+        }
+      } catch {
+      }
+    }
+
+    const interval = window.setInterval(refreshUnreadCount, 15_000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!soundEnabled) {
-      previousUnreadCount.current = unreadNotifications;
+      previousUnreadCount.current = liveUnreadNotifications;
       return;
     }
 
-    if (unreadNotifications > previousUnreadCount.current) {
+    if (liveUnreadNotifications > previousUnreadCount.current) {
       playNotificationSound();
     }
 
-    previousUnreadCount.current = unreadNotifications;
-  }, [soundEnabled, unreadNotifications]);
+    previousUnreadCount.current = liveUnreadNotifications;
+  }, [soundEnabled, liveUnreadNotifications]);
 
   return (
     <main className="h-screen overflow-hidden bg-background text-foreground">
@@ -165,17 +197,17 @@ export function WorkspaceFrame({
                 <div className="flex items-center gap-2">
                   <Link
                     aria-label={
-                      unreadNotifications > 0
-                        ? `${unreadNotifications} unread notifications`
+                      liveUnreadNotifications > 0
+                        ? `${liveUnreadNotifications} unread notifications`
                         : "Notifications"
                     }
                     className={`relative rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-muted outline-none transition duration-150 hover:bg-white/5 hover:text-foreground focus-visible:ring-2 ${accent.focusRing}`}
                     href={notificationHref}
                   >
                     Updates
-                    {unreadNotifications > 0 ? (
+                    {liveUnreadNotifications > 0 ? (
                       <span className="ml-2 rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-white">
-                        {formatUnreadCount(unreadNotifications)}
+                        {formatUnreadCount(liveUnreadNotifications)}
                       </span>
                     ) : null}
                   </Link>
@@ -190,7 +222,7 @@ export function WorkspaceFrame({
                       const nextEnabled = !soundEnabled;
                       setSoundEnabled(nextEnabled);
 
-                      if (nextEnabled && unreadNotifications > 0) {
+                      if (nextEnabled && liveUnreadNotifications > 0) {
                         playNotificationSound();
                       }
                     }}
@@ -279,9 +311,9 @@ export function WorkspaceFrame({
                     onClick={() => setIsMobileNavOpen(false)}
                   >
                     <span>Updates</span>
-                    {unreadNotifications > 0 ? (
+                    {liveUnreadNotifications > 0 ? (
                       <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-white">
-                        {formatUnreadCount(unreadNotifications)}
+                        {formatUnreadCount(liveUnreadNotifications)}
                       </span>
                     ) : null}
                   </Link>

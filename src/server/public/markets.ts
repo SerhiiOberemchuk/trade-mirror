@@ -1,12 +1,16 @@
 import { db } from "@/db";
 import { tradingPairsSchema } from "@/db/schema/trading-pairs.schema";
 import { getBinanceTickerSnapshots } from "@/server/market-data/binance";
+import { getCoinMetadataForPairs } from "@/server/market-data/coingecko";
 import { asc, eq } from "drizzle-orm";
 
 export type PublicMarketRow = {
   pair: string;
   price: string;
   change: string;
+  logoUrl: string | null;
+  marketCap: string;
+  name: string;
   volume: string;
   spread: string;
 };
@@ -30,6 +34,7 @@ export async function getPublicMarketsState(): Promise<PublicMarketsState> {
       .where(eq(tradingPairsSchema.status, "enabled"))
       .orderBy(asc(tradingPairsSchema.symbol));
     const tickerRows = await getBinanceTickerSnapshots(pairRows.map((pair) => pair.symbol));
+    const metadataBySymbol = await getCoinMetadataForPairs(pairRows.map((pair) => pair.symbol));
     const tickerBySymbol = new Map(
       tickerRows.map((ticker) => [ticker.symbol, ticker]),
     );
@@ -42,9 +47,13 @@ export async function getPublicMarketsState(): Promise<PublicMarketsState> {
     return {
       rows: pairRows.map((pair) => {
         const ticker = tickerBySymbol.get(pair.symbol);
+        const metadata = metadataBySymbol.get(pair.symbol);
 
         return {
           change: ticker ? formatPercent(ticker.changePercent24h) : "n/a",
+          logoUrl: metadata?.imageUrl ?? null,
+          marketCap: metadata?.marketCapUsd ? formatCompactMoney(metadata.marketCapUsd) : "n/a",
+          name: metadata?.name ?? pair.symbol,
           pair: pair.symbol,
           price: ticker ? formatMoneyFromNumber(ticker.price) : "n/a",
           spread: formatSpread(pair.spreadBps),

@@ -56,6 +56,11 @@ Last updated: 2026-05-21
 - [x] Added normalized SSE market-data fan-out and live terminal market tape from real Binance prices.
 - [x] Added Binance candle adapter and real OHLCV candlestick panel on the trading terminal.
 - [x] Added persisted notification center for client/admin updates with unread counters and optional browser sound.
+- [x] Added client notification polling through `/api/notifications/unread` so unread counters refresh without manual page reloads.
+- [x] Added Binance WebSocket live market tape with normalized SSE fallback.
+- [x] Replaced the custom terminal SVG candle chart with TradingView Lightweight Charts.
+- [x] Added CoinGecko metadata adapter for public market coin names, logos, and market cap.
+- [x] Added copy trading analytics for client/admin: copied exposure, copied PnL, win rate, and recent copied executions.
 - [x] Added centralized cache tags and `updateTag()` mutation invalidation helpers for existing Server Actions.
 - [x] Generated and applied Drizzle migrations for persisted deposit, withdrawal, trading pair, support ticket, and KYC workflows.
 - [x] Generated and applied Drizzle migrations for bonus campaign and simulated trading workflows.

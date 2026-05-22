@@ -3,7 +3,10 @@ import {
   copySettingsSchema,
   traderProfilesSchema,
 } from "@/db/schema/copy-trading.schema";
-import { simulatedTradesSchema } from "@/db/schema/trading.schema";
+import {
+  simulatedPositionsSchema,
+  simulatedTradesSchema,
+} from "@/db/schema/trading.schema";
 import { ActionToolbar } from "@/components/dashboard/primitives";
 import {
   DashboardCard,
@@ -32,6 +35,17 @@ type SuggestedTraderRow = {
   pnl: string;
 };
 
+type CopyExecutionRow = {
+  action: "open" | "close";
+  id: string;
+  pair: string;
+  pnl: string;
+  pnlCents: number;
+  side: "long" | "short";
+  time: string;
+  value: string;
+};
+
 export default async function CopyTradingPage() {
   const session = await requireSession();
   const state = await getCopyTradingState(session.user.id);
@@ -54,6 +68,11 @@ export default async function CopyTradingPage() {
             value: formatSignedMoney(state.copyPnlCents, "USD"),
             change: "from copied closes",
           },
+          {
+            label: "Copy win rate",
+            value: formatBps(state.copyWinRateBps),
+            change: `${state.copiedClosedCount} closed copies`,
+          },
         ]
       : [
           { label: "Active providers", value: "n/a", change: "setup required" },
@@ -63,6 +82,7 @@ export default async function CopyTradingPage() {
             change: "setup required",
           },
           { label: "Copy PnL", value: "n/a", change: "setup required" },
+          { label: "Copy win rate", value: "n/a", change: "setup required" },
         ];
 
   return (
@@ -72,7 +92,7 @@ export default async function CopyTradingPage() {
         title="Copy Trading"
       />
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
           <StatTile
             change={stat.change}
@@ -82,6 +102,44 @@ export default async function CopyTradingPage() {
           />
         ))}
       </section>
+
+      {state.kind === "ready" ? (
+        <section className="mt-6 grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
+          <DashboardCard description="Open copied positions created by copy automation" title="Copied exposure">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <MetricCard label="Open copied positions" value={String(state.copiedOpenCount)} />
+              <MetricCard label="Open copied notional" value={formatMoney(state.copiedOpenNotionalCents, "USD")} />
+              <MetricCard label="Closed copy executions" value={String(state.copiedClosedCount)} />
+            </div>
+          </DashboardCard>
+
+          <DashboardCard description="Latest copied open and close executions" title="Copy execution history">
+            {state.recentExecutions.length > 0 ? (
+              <div className="space-y-3">
+                {state.recentExecutions.map((execution) => (
+                  <div className="grid gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm md:grid-cols-[0.8fr_0.6fr_0.6fr_0.7fr_0.8fr] md:items-center" key={execution.id}>
+                    <div>
+                      <p className="font-medium">{execution.pair}</p>
+                      <p className="text-xs text-muted">{execution.time}</p>
+                    </div>
+                    <StatusBadge tone={execution.action === "open" ? "primary" : "muted"}>{execution.action}</StatusBadge>
+                    <StatusBadge tone={execution.side === "long" ? "success" : "danger"}>{execution.side}</StatusBadge>
+                    <p className="font-mono text-muted">{execution.value}</p>
+                    <p className={`font-mono ${execution.pnlCents >= 0 ? "text-success" : "text-danger"}`}>
+                      {execution.pnl}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                description="Copied executions will appear after a provider opens or closes a simulated position."
+                title="No copied executions"
+              />
+            )}
+          </DashboardCard>
+        </section>
+      ) : null}
 
       <section className="mt-6 grid gap-5 xl:grid-cols-[1fr_0.85fr]">
         <DashboardCard
@@ -220,11 +278,16 @@ async function getCopyTradingState(userId: string): Promise<
       pausedCount: number;
       allocatedCents: number;
       copyPnlCents: number;
+      copyWinRateBps: number;
+      copiedClosedCount: number;
+      copiedOpenCount: number;
+      copiedOpenNotionalCents: number;
+      recentExecutions: CopyExecutionRow[];
     }
   | { kind: "setup-required" }
 > {
   try {
-    const [settingsRows, profileRows, copyTradeRows] = await Promise.all([
+    const [settingsRows, profileRows, copyTradeRows, copiedPositionRows] = await Promise.all([
       db
         .select()
         .from(copySettingsSchema)
@@ -243,8 +306,21 @@ async function getCopyTradingState(userId: string): Promise<
             eq(simulatedTradesSchema.userId, userId),
             eq(simulatedTradesSchema.source, "copy"),
           ),
+        )
+        .orderBy(desc(simulatedTradesSchema.executedAt)),
+      db
+        .select()
+        .from(simulatedPositionsSchema)
+        .where(
+          and(
+            eq(simulatedPositionsSchema.userId, userId),
+            eq(simulatedPositionsSchema.source, "copy"),
+          ),
         ),
     ]);
+    const closedCopyTrades = copyTradeRows.filter((row) => row.action === "close");
+    const winningCopyTrades = closedCopyTrades.filter((row) => row.pnlCents > 0);
+    const copiedOpenPositions = copiedPositionRows.filter((row) => row.status === "open");
 
     return {
       activeCount: settingsRows.filter((row) => row.status === "active").length,
@@ -254,6 +330,16 @@ async function getCopyTradingState(userId: string): Promise<
       ),
       copyPnlCents: copyTradeRows.reduce(
         (total, row) => total + row.pnlCents,
+        0,
+      ),
+      copyWinRateBps:
+        closedCopyTrades.length > 0
+          ? Math.round((winningCopyTrades.length / closedCopyTrades.length) * 10_000)
+          : 0,
+      copiedClosedCount: closedCopyTrades.length,
+      copiedOpenCount: copiedOpenPositions.length,
+      copiedOpenNotionalCents: copiedOpenPositions.reduce(
+        (total, row) => total + row.notionalCents,
         0,
       ),
       allocations: settingsRows.map((row) => ({
@@ -266,6 +352,16 @@ async function getCopyTradingState(userId: string): Promise<
       })),
       kind: "ready",
       pausedCount: settingsRows.filter((row) => row.status === "paused").length,
+      recentExecutions: copyTradeRows.slice(0, 8).map((row) => ({
+        action: row.action,
+        id: row.id,
+        pair: row.pairSymbol,
+        pnl: formatSignedMoney(row.pnlCents, "USD"),
+        pnlCents: row.pnlCents,
+        side: row.side,
+        time: formatDateTime(row.executedAt),
+        value: formatMoney(row.notionalCents, "USD"),
+      })),
       suggested: profileRows.slice(0, 3).map((row) => ({
         id: row.id,
         name: row.displayName,
@@ -276,6 +372,15 @@ async function getCopyTradingState(userId: string): Promise<
   } catch {
     return { kind: "setup-required" };
   }
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-background px-4 py-3">
+      <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-2 font-mono text-lg font-semibold">{value}</p>
+    </div>
+  );
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
@@ -313,5 +418,14 @@ function formatDate(date: Date) {
     day: "numeric",
     month: "short",
     year: "numeric",
+  }).format(date);
+}
+
+function formatDateTime(date: Date) {
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "short",
   }).format(date);
 }
