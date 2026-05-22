@@ -13,10 +13,12 @@ import {
 } from "@/server/actions/state";
 import { requireSession } from "@/server/auth/session";
 import { invalidateAfterMutation } from "@/server/cache/revalidation";
+import { createAdminNotification } from "@/server/notifications/notifications";
 
 const SUPPORT_PATH = "/support";
 const DASHBOARD_PATH = "/dashboard";
 const ADMIN_SUPPORT_PATH = "/admin/support";
+const ADMIN_NOTIFICATIONS_PATH = "/admin/notifications";
 
 type SupportTicketPriority =
   (typeof supportTicketPriorityEnum.enumValues)[number];
@@ -54,12 +56,20 @@ export async function createSupportTicketAction(
       userName: session.user.name,
     });
 
+    await createAdminNotification({
+      body: `${session.user.name} submitted a ${priority} priority support ticket.`,
+      href: ADMIN_SUPPORT_PATH,
+      title: "New support ticket",
+      type: "support",
+    });
+
     invalidateAfterMutation({
-      paths: [SUPPORT_PATH, DASHBOARD_PATH, ADMIN_SUPPORT_PATH],
+      paths: [SUPPORT_PATH, DASHBOARD_PATH, ADMIN_SUPPORT_PATH, ADMIN_NOTIFICATIONS_PATH],
       tags: [
         cacheTags.userSupport(session.user.id),
         cacheTags.userDashboard(session.user.id),
         CACHE_TAGS.adminSupport,
+        CACHE_TAGS.adminNotifications,
       ],
     });
 

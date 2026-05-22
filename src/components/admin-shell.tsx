@@ -12,8 +12,11 @@ import {
 export type { DataTableColumn } from "@/components/dashboard/primitives";
 import { WorkspaceFrame } from "@/components/dashboard/workspace-frame";
 import { adminNavItems } from "@/lib/navigation";
+import { getUnreadNotificationCount } from "@/server/notifications/notifications";
+import type { Route } from "next";
 
 type ShellUser = {
+  id: string;
   name: string;
   email: string;
   role?: string | string[] | null;
@@ -24,7 +27,9 @@ type AdminShellProps = {
   user: ShellUser;
 };
 
-export function AdminShell({ children, user }: AdminShellProps) {
+export async function AdminShell({ children, user }: AdminShellProps) {
+  const unreadNotifications = await getUnreadNotificationCount(user.id);
+
   return (
     <WorkspaceFrame
       balanceLabel="Open reviews"
@@ -32,8 +37,11 @@ export function AdminShell({ children, user }: AdminShellProps) {
       brandSubtitle="Operations workspace"
       brandTitle="TradeMirror Admin"
       navItems={adminNavItems}
+      notificationHref={"/admin/notifications" as Route}
+      unreadNotifications={unreadNotifications}
       searchLabel="Admin search"
       searchPlaceholder="Search users, trades, requests"
+      switchLink={{ href: "/dashboard", label: "Client workspace" }}
       tone="warning"
       user={user}
     >

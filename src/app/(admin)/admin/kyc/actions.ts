@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { kycRequestsSchema } from "@/db/schema/kyc.schema";
-import { CACHE_TAGS } from "@/lib/cache-tags";
+import { CACHE_TAGS, cacheTags } from "@/lib/cache-tags";
 import {
   actionError,
   actionSuccess,
@@ -10,10 +10,12 @@ import {
 } from "@/server/actions/state";
 import { requireAdminSession } from "@/server/auth/session";
 import { invalidateAfterMutation } from "@/server/cache/revalidation";
+import { createUserNotification } from "@/server/notifications/notifications";
 import { eq } from "drizzle-orm";
 
 const VERIFICATION_PATH = "/verification";
 const ADMIN_KYC_PATH = "/admin/kyc";
+const NOTIFICATIONS_PATH = "/notifications";
 
 export async function approveKycRequestAction(formData: FormData): Promise<ActionResult> {
   return reviewKycRequest(formData, "approved");
@@ -40,6 +42,16 @@ async function reviewKycRequest(
   }
 
   try {
+    const [request] = await db
+      .select()
+      .from(kycRequestsSchema)
+      .where(eq(kycRequestsSchema.id, requestId))
+      .limit(1);
+
+    if (!request) {
+      return actionError("KYC request was not found.");
+    }
+
     await db
       .update(kycRequestsSchema)
       .set({
@@ -52,9 +64,28 @@ async function reviewKycRequest(
       })
       .where(eq(kycRequestsSchema.id, requestId));
 
+    await createUserNotification({
+      body:
+        status === "approved"
+          ? "Your simulated verification request was approved."
+          : "Your simulated verification request was rejected.",
+      href: VERIFICATION_PATH,
+      title: status === "approved" ? "Verification approved" : "Verification rejected",
+      type: "kyc",
+      userId: request.userId,
+    });
+
     invalidateAfterMutation({
-      paths: [VERIFICATION_PATH, ADMIN_KYC_PATH],
-      tags: [CACHE_TAGS.adminKyc],
+      paths: [VERIFICATION_PATH, ADMIN_KYC_PATH, NOTIFICATIONS_PATH],
+      tags: [
+        CACHE_TAGS.adminKyc,
+        ...(request.userId
+          ? [
+              cacheTags.userNotifications(request.userId),
+              cacheTags.userVerification(request.userId),
+            ]
+          : []),
+      ],
     });
 
     return actionSuccess("KYC review updated.");

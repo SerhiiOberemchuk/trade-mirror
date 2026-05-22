@@ -10,9 +10,11 @@ import {
 } from "@/server/actions/state";
 import { requireSession } from "@/server/auth/session";
 import { invalidateAfterMutation } from "@/server/cache/revalidation";
+import { createAdminNotification } from "@/server/notifications/notifications";
 
 const VERIFICATION_PATH = "/verification";
 const ADMIN_KYC_PATH = "/admin/kyc";
+const ADMIN_NOTIFICATIONS_PATH = "/admin/notifications";
 
 type KycDocumentType = (typeof kycDocumentTypeEnum.enumValues)[number];
 
@@ -57,9 +59,20 @@ export async function submitKycRequestAction(
       userName: session.user.name,
     });
 
+    await createAdminNotification({
+      body: `${session.user.name} submitted a simulated verification request.`,
+      href: ADMIN_KYC_PATH,
+      title: "New KYC request",
+      type: "kyc",
+    });
+
     invalidateAfterMutation({
-      paths: [VERIFICATION_PATH, ADMIN_KYC_PATH],
-      tags: [cacheTags.userVerification(session.user.id), CACHE_TAGS.adminKyc],
+      paths: [VERIFICATION_PATH, ADMIN_KYC_PATH, ADMIN_NOTIFICATIONS_PATH],
+      tags: [
+        cacheTags.userVerification(session.user.id),
+        CACHE_TAGS.adminKyc,
+        CACHE_TAGS.adminNotifications,
+      ],
     });
 
     return actionSuccess("Verification request submitted for admin review.");

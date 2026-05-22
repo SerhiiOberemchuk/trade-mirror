@@ -24,6 +24,7 @@ export const dashboardNavItems = [
   { label: "Trader Profile", href: "/trader-profile", symbol: "PF" },
   { label: "Wallet", href: "/wallet", symbol: "WL" },
   { label: "History", href: "/history", symbol: "HS" },
+  { label: "Notifications", href: "/notifications" as Route, symbol: "NT" },
   { label: "Verification", href: "/verification", symbol: "KY" },
   { label: "Support", href: "/support", symbol: "SP" },
   { label: "Settings", href: "/settings", symbol: "ST" },
@@ -41,5 +42,6 @@ export const adminNavItems = [
   { label: "Copy Trading", href: "/admin/copy-trading", symbol: "CT" },
   { label: "Referrals", href: "/admin/referrals", symbol: "RF" },
   { label: "Support", href: "/admin/support", symbol: "SP" },
+  { label: "Notifications", href: "/admin/notifications" as Route, symbol: "NT" },
   { label: "Settings", href: "/admin/settings", symbol: "ST" },
 ] as const satisfies readonly NavItem[];

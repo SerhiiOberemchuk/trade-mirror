@@ -15,6 +15,7 @@ import {
 } from "@/server/actions/state";
 import { requireSession } from "@/server/auth/session";
 import { invalidateAfterMutation } from "@/server/cache/revalidation";
+import { createAdminNotification, createUserNotification } from "@/server/notifications/notifications";
 import { eq } from "drizzle-orm";
 
 const WALLET_PATH = "/wallet";
@@ -22,6 +23,8 @@ const DASHBOARD_PATH = "/dashboard";
 const ADMIN_DEPOSITS_PATH = "/admin/deposits";
 const ADMIN_WITHDRAWALS_PATH = "/admin/withdrawals";
 const ADMIN_BONUSES_PATH = "/admin/bonuses";
+const ADMIN_NOTIFICATIONS_PATH = "/admin/notifications";
+const NOTIFICATIONS_PATH = "/notifications";
 const MIN_DEPOSIT_CENTS = 1_000;
 const MAX_DEPOSIT_CENTS = 100_000_00;
 const MIN_WITHDRAWAL_CENTS = 1_000;
@@ -71,6 +74,13 @@ export async function createDepositRequestAction(
       userName: session.user.name,
     });
 
+    await createAdminNotification({
+      body: `${session.user.name} submitted a simulated deposit request for ${formatMoney(amountCents)}.`,
+      href: ADMIN_DEPOSITS_PATH,
+      title: "New deposit request",
+      type: "deposit",
+    });
+
     invalidateWalletDeposit(session.user.id);
 
     return actionSuccess("Deposit request submitted for admin review.");
@@ -112,6 +122,13 @@ export async function createWithdrawalRequestAction(
       userEmail: session.user.email,
       userId: session.user.id,
       userName: session.user.name,
+    });
+
+    await createAdminNotification({
+      body: `${session.user.name} submitted a simulated withdrawal request for ${formatMoney(amountCents)}.`,
+      href: ADMIN_WITHDRAWALS_PATH,
+      title: "New withdrawal request",
+      type: "withdrawal",
     });
 
     invalidateWalletWithdrawal(session.user.id);
@@ -185,12 +202,27 @@ export async function applyBonusCodeAction(
       })
       .where(eq(bonusCampaignsSchema.id, campaign.id));
 
+    await createUserNotification({
+      body: `${campaign.code} added ${formatMoney(rewardCents)} as approved simulated credit.`,
+      href: WALLET_PATH,
+      title: "Bonus applied",
+      type: "deposit",
+      userId: session.user.id,
+    });
+
     invalidateWalletBonus(session.user.id);
 
     return actionSuccess("Bonus applied as approved simulated credit.");
   } catch {
     return actionError("Unable to apply this bonus code. Please try again.");
   }
+}
+
+function formatMoney(amountCents: number) {
+  return new Intl.NumberFormat("en", {
+    currency: "USD",
+    style: "currency",
+  }).format(amountCents / 100);
 }
 
 function isDepositMethod(method: string): method is DepositMethod {
@@ -207,32 +239,35 @@ function isWithdrawalRiskLevel(
 
 function invalidateWalletDeposit(userId: string) {
   invalidateAfterMutation({
-    paths: [WALLET_PATH, DASHBOARD_PATH, ADMIN_DEPOSITS_PATH],
+    paths: [WALLET_PATH, DASHBOARD_PATH, ADMIN_DEPOSITS_PATH, ADMIN_NOTIFICATIONS_PATH],
     tags: [
       cacheTags.userWallet(userId),
       cacheTags.userDashboard(userId),
       CACHE_TAGS.adminDeposits,
+      CACHE_TAGS.adminNotifications,
     ],
   });
 }
 
 function invalidateWalletWithdrawal(userId: string) {
   invalidateAfterMutation({
-    paths: [WALLET_PATH, DASHBOARD_PATH, ADMIN_WITHDRAWALS_PATH],
+    paths: [WALLET_PATH, DASHBOARD_PATH, ADMIN_WITHDRAWALS_PATH, ADMIN_NOTIFICATIONS_PATH],
     tags: [
       cacheTags.userWallet(userId),
       cacheTags.userDashboard(userId),
       CACHE_TAGS.adminWithdrawals,
+      CACHE_TAGS.adminNotifications,
     ],
   });
 }
 
 function invalidateWalletBonus(userId: string) {
   invalidateAfterMutation({
-    paths: [WALLET_PATH, DASHBOARD_PATH, ADMIN_DEPOSITS_PATH, ADMIN_BONUSES_PATH],
+    paths: [WALLET_PATH, DASHBOARD_PATH, NOTIFICATIONS_PATH, ADMIN_DEPOSITS_PATH, ADMIN_BONUSES_PATH],
     tags: [
       cacheTags.userWallet(userId),
       cacheTags.userDashboard(userId),
+      cacheTags.userNotifications(userId),
       CACHE_TAGS.adminDeposits,
       CACHE_TAGS.adminBonuses,
     ],

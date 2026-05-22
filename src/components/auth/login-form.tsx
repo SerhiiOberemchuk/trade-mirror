@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
@@ -25,7 +26,7 @@ export function LoginForm() {
     const { error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: "/workspace",
     });
 
     setIsPending(false);
@@ -40,7 +41,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/workspace" as Route);
     router.refresh();
   }
 

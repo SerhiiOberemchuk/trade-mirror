@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { depositRequestsSchema } from "@/db/schema/wallet.schema";
-import { CACHE_TAGS } from "@/lib/cache-tags";
+import { CACHE_TAGS, cacheTags } from "@/lib/cache-tags";
 import {
   actionError,
   actionSuccess,
@@ -10,9 +10,12 @@ import {
 } from "@/server/actions/state";
 import { requireAdminSession } from "@/server/auth/session";
 import { invalidateAfterMutation } from "@/server/cache/revalidation";
+import { createUserNotification } from "@/server/notifications/notifications";
 import { eq } from "drizzle-orm";
 
 const ADMIN_DEPOSITS_PATH = "/admin/deposits";
+const NOTIFICATIONS_PATH = "/notifications";
+const WALLET_PATH = "/wallet";
 
 export async function approveDepositAction(formData: FormData): Promise<ActionResult> {
   return reviewDeposit(formData, "approved");
@@ -34,6 +37,16 @@ async function reviewDeposit(
   }
 
   try {
+    const [deposit] = await db
+      .select()
+      .from(depositRequestsSchema)
+      .where(eq(depositRequestsSchema.id, depositId))
+      .limit(1);
+
+    if (!deposit) {
+      return actionError("Deposit request was not found.");
+    }
+
     await db
       .update(depositRequestsSchema)
       .set({
@@ -45,13 +58,36 @@ async function reviewDeposit(
       })
       .where(eq(depositRequestsSchema.id, depositId));
 
+    await createUserNotification({
+      body:
+        status === "approved"
+          ? `Your simulated deposit for ${formatMoney(deposit.amountCents)} was approved.`
+          : `Your simulated deposit for ${formatMoney(deposit.amountCents)} was rejected.`,
+      href: "/wallet",
+      title: status === "approved" ? "Deposit approved" : "Deposit rejected",
+      type: "deposit",
+      userId: deposit.userId,
+    });
+
     invalidateAfterMutation({
-      paths: [ADMIN_DEPOSITS_PATH],
-      tags: [CACHE_TAGS.adminDeposits],
+      paths: [ADMIN_DEPOSITS_PATH, WALLET_PATH, NOTIFICATIONS_PATH],
+      tags: [
+        CACHE_TAGS.adminDeposits,
+        ...(deposit.userId
+          ? [cacheTags.userNotifications(deposit.userId), cacheTags.userWallet(deposit.userId)]
+          : []),
+      ],
     });
 
     return actionSuccess("Deposit review updated.");
   } catch {
     return actionError("Unable to update this deposit review. Please try again.");
   }
+}
+
+function formatMoney(amountCents: number) {
+  return new Intl.NumberFormat("en", {
+    currency: "USD",
+    style: "currency",
+  }).format(amountCents / 100);
 }

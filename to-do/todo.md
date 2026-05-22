@@ -55,12 +55,14 @@ Last updated: 2026-05-21
 - [x] Removed obsolete static public market/trader mock data after public pages moved to real records.
 - [x] Added normalized SSE market-data fan-out and live terminal market tape from real Binance prices.
 - [x] Added Binance candle adapter and real OHLCV candlestick panel on the trading terminal.
+- [x] Added persisted notification center for client/admin updates with unread counters and optional browser sound.
 - [x] Added centralized cache tags and `updateTag()` mutation invalidation helpers for existing Server Actions.
 - [x] Generated and applied Drizzle migrations for persisted deposit, withdrawal, trading pair, support ticket, and KYC workflows.
 - [x] Generated and applied Drizzle migrations for bonus campaign and simulated trading workflows.
 - [x] Generated and applied Drizzle migrations for trader profile and copy setting workflows.
 - [x] Generated and applied Drizzle migrations for copied position link fields and stop loss / take profit fields on `simulated_position`.
 - [x] Generated and applied Drizzle migration for referral profile workflows.
+- [x] Generated and applied Drizzle migration for notification center workflows.
 - [x] Added navigation polish pass:
   - [x] active public navigation states
   - [x] active user dashboard sidebar/mobile navigation states
@@ -86,7 +88,7 @@ Active phase: make the already planned domain workflows functional.
 - [x] Improve mobile navigation for workspace and admin sections.
 - [x] Add first-pass accessibility labels, focus states, status regions, and keyboard-friendly controls.
 - [ ] Re-run auth flow after layout changes: register, verify email, login, logout, protected routes, admin redirect.
-- [ ] Re-run smoke tests for wallet deposits/withdrawals, support tickets, KYC review, trading pair controls, and admin user controls after the latest migrations.
+- [ ] Re-run smoke tests for wallet deposits/withdrawals, support tickets, KYC review, trading pair controls, admin user controls, and notification delivery after the latest migrations.
 
 ### After Design Review
 

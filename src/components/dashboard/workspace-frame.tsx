@@ -2,7 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark } from "@/components/brand-mark";
 import { NavLinkItem } from "@/components/nav-link";
@@ -19,6 +19,11 @@ type NavItem = {
   symbol?: string;
 };
 
+type WorkspaceSwitchLink = {
+  href: Route;
+  label: string;
+};
+
 type WorkspaceFrameProps = {
   balanceLabel: string;
   balanceValue: string;
@@ -26,8 +31,11 @@ type WorkspaceFrameProps = {
   brandTitle: string;
   children: React.ReactNode;
   navItems: readonly NavItem[];
+  notificationHref: Route;
+  unreadNotifications: number;
   searchLabel: string;
   searchPlaceholder: string;
+  switchLink?: WorkspaceSwitchLink;
   tone?: "primary" | "warning";
   user: ShellUser;
 };
@@ -39,13 +47,18 @@ export function WorkspaceFrame({
   brandTitle,
   children,
   navItems,
+  notificationHref,
+  unreadNotifications,
   searchLabel,
   searchPlaceholder,
+  switchLink,
   tone = "primary",
   user,
 }: WorkspaceFrameProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const previousUnreadCount = useRef(unreadNotifications);
   const mobileNavId = useId();
   const initials = getInitials(user.name);
   const role = Array.isArray(user.role) ? user.role.join(", ") : user.role;
@@ -65,6 +78,19 @@ export function WorkspaceFrame({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isMobileNavOpen]);
+
+  useEffect(() => {
+    if (!soundEnabled) {
+      previousUnreadCount.current = unreadNotifications;
+      return;
+    }
+
+    if (unreadNotifications > previousUnreadCount.current) {
+      playNotificationSound();
+    }
+
+    previousUnreadCount.current = unreadNotifications;
+  }, [soundEnabled, unreadNotifications]);
 
   return (
     <main className="h-screen overflow-hidden bg-background text-foreground">
@@ -136,6 +162,51 @@ export function WorkspaceFrame({
                 />
               </label>
               <div className="hidden items-center gap-3 sm:flex">
+                <div className="flex items-center gap-2">
+                  <Link
+                    aria-label={
+                      unreadNotifications > 0
+                        ? `${unreadNotifications} unread notifications`
+                        : "Notifications"
+                    }
+                    className={`relative rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-muted outline-none transition duration-150 hover:bg-white/5 hover:text-foreground focus-visible:ring-2 ${accent.focusRing}`}
+                    href={notificationHref}
+                  >
+                    Updates
+                    {unreadNotifications > 0 ? (
+                      <span className="ml-2 rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-white">
+                        {formatUnreadCount(unreadNotifications)}
+                      </span>
+                    ) : null}
+                  </Link>
+                  <button
+                    aria-pressed={soundEnabled}
+                    className={`rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium outline-none transition duration-150 focus-visible:ring-2 ${accent.focusRing} ${
+                      soundEnabled
+                        ? "text-foreground"
+                        : "text-muted hover:bg-white/5 hover:text-foreground"
+                    }`}
+                    onClick={() => {
+                      const nextEnabled = !soundEnabled;
+                      setSoundEnabled(nextEnabled);
+
+                      if (nextEnabled && unreadNotifications > 0) {
+                        playNotificationSound();
+                      }
+                    }}
+                    type="button"
+                  >
+                    Sound {soundEnabled ? "on" : "off"}
+                  </button>
+                </div>
+                {switchLink ? (
+                  <Link
+                    className={`rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-muted outline-none transition duration-150 hover:bg-white/5 hover:text-foreground focus-visible:ring-2 ${accent.focusRing}`}
+                    href={switchLink.href}
+                  >
+                    {switchLink.label}
+                  </Link>
+                ) : null}
                 <div className="rounded-lg border border-border bg-card px-3 py-2 text-right">
                   <p className="font-mono text-sm font-semibold">{balanceValue}</p>
                   <p className="text-xs text-muted">{balanceLabel}</p>
@@ -202,6 +273,27 @@ export function WorkspaceFrame({
                   ))}
                 </nav>
                 <div className="border-t border-border p-4">
+                  <Link
+                    className={`mb-3 flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-muted outline-none transition duration-150 hover:bg-white/5 hover:text-foreground focus-visible:ring-2 ${accent.focusRing}`}
+                    href={notificationHref}
+                    onClick={() => setIsMobileNavOpen(false)}
+                  >
+                    <span>Updates</span>
+                    {unreadNotifications > 0 ? (
+                      <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-white">
+                        {formatUnreadCount(unreadNotifications)}
+                      </span>
+                    ) : null}
+                  </Link>
+                  {switchLink ? (
+                    <Link
+                      className={`mb-3 block rounded-lg border border-border bg-card px-3 py-2 text-center text-sm font-medium text-muted outline-none transition duration-150 hover:bg-white/5 hover:text-foreground focus-visible:ring-2 ${accent.focusRing}`}
+                      href={switchLink.href}
+                      onClick={() => setIsMobileNavOpen(false)}
+                    >
+                      {switchLink.label}
+                    </Link>
+                  ) : null}
                   <div className="rounded-lg border border-border bg-card px-3 py-2">
                     <p className="font-mono text-sm font-semibold">{balanceValue}</p>
                     <p className="text-xs text-muted">{balanceLabel}</p>
@@ -218,6 +310,35 @@ export function WorkspaceFrame({
       </div>
     </main>
   );
+}
+
+function formatUnreadCount(count: number) {
+  return count > 99 ? "99+" : String(count);
+}
+
+function playNotificationSound() {
+  const AudioContext =
+    window.AudioContext ||
+    (window as typeof window & { webkitAudioContext?: typeof window.AudioContext })
+      .webkitAudioContext;
+
+  if (!AudioContext) {
+    return;
+  }
+
+  const context = new AudioContext();
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(880, context.currentTime);
+  gain.gain.setValueAtTime(0.0001, context.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.18);
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start();
+  oscillator.stop(context.currentTime + 0.2);
 }
 
 function getInitials(name: string) {

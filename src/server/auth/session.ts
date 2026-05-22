@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { hasAdminRole } from "@/lib/auth-roles";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -20,10 +21,8 @@ export async function requireSession() {
 
 export async function requireAdminSession() {
   const session = await requireSession();
-  const { role } = session.user;
-  const isAdmin = Array.isArray(role) ? role.includes("admin") : role === "admin";
 
-  if (!isAdmin) {
+  if (!hasAdminRole(session.user.role)) {
     redirect("/dashboard");
   }
 
